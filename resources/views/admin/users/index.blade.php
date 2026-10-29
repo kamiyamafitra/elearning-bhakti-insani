@@ -9,7 +9,7 @@
     <form method="GET" action="{{ route('admin.users.index') }}" class="d-flex gap-2 w-100 w-md-auto">
         <div class="input-group">
             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-            <input type="text" name="q" class="form-control" placeholder="Cari nama atau surel..." value="{{ $search }}">
+            <input type="text" name="q" class="form-control" placeholder="Cari nama, username, atau surel..." value="{{ $search }}">
         </div>
         <button class="btn btn-outline-secondary" type="submit">Cari</button>
     </form>
@@ -29,6 +29,7 @@
                 <thead class="table-light">
                     <tr>
                         <th class="ps-4">Nama</th>
+                        <th>Username</th>
                         <th>Surel</th>
                         <th>Peran</th>
                         <th>Status</th>
@@ -48,6 +49,7 @@
                                     </div>
                                 </div>
                             </td>
+                            <td>{{ $user->username }}</td>
                             <td>{{ $user->email }}</td>
                             <td><span class="badge text-bg-light text-capitalize">{{ $user->role }}</span></td>
                             <td>
@@ -71,7 +73,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
+                            <td colspan="6" class="text-center text-muted py-4">
                                 <i class="bi bi-people fs-1 d-block mb-2"></i>
                                 Tidak ada data pengguna.
                             </td>

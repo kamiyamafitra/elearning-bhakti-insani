@@ -13,6 +13,9 @@
         <form method="POST" action="{{ route('admin.subjects.update', $subject) }}">
             @csrf
             @method('PUT')
+
+            <h2 class="h6 text-uppercase fw-bold mb-3" style="color: #64748B;">Informasi Mata Pelajaran</h2>
+
             <div class="mb-3">
                 <label class="form-label">Kode Mata Pelajaran</label>
                 <input type="text" name="code" class="form-control" value="{{ old('code', $subject->code) }}" required>
@@ -21,11 +24,18 @@
                 <label class="form-label">Nama Mata Pelajaran</label>
                 <input type="text" name="name" class="form-control" value="{{ old('name', $subject->name) }}" required>
             </div>
-            <div class="mb-3">
+            <div class="mb-4">
                 <label class="form-label">Deskripsi</label>
                 <textarea name="description" class="form-control" rows="3">{{ old('description', $subject->description) }}</textarea>
             </div>
-            <button class="btn btn-primary">Simpan Perubahan</button>
+
+            @include('admin.subjects.partials.schedule-editor', [
+                'classes' => $classes,
+                'teachers' => $teachers,
+                'subject' => $subject,
+            ])
+
+            <button class="btn btn-primary mt-4">Simpan Perubahan</button>
         </form>
     </div>
 </div>

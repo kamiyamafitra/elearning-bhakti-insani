@@ -3,56 +3,193 @@
 @section('title', 'Pengelolaan Guru')
 
 @section('content')
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-3 mb-3 border-bottom">
-    <h1 class="h3">Guru</h1>
-    <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary">Tambah Guru</a>
-</div>
+<div class="directory-page">
+    <section class="directory-hero">
+        <div class="directory-hero__content">
+            <div class="directory-hero__heading">
+                <h1 class="directory-hero__title">Data Guru</h1>
+                <span class="directory-count-badge">
+                    <i class="bi bi-person-workspace" aria-hidden="true"></i>
+                    {{ $totalTeachers }} Guru
+                </span>
+            </div>
+            <p class="directory-hero__description">
+                Kelola informasi guru dan data kepegawaian SMK Bhakti Insani Bogor.
+            </p>
+        </div>
+        <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary directory-hero__action">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            Tambah Guru
+        </a>
+    </section>
 
-<form method="GET" action="{{ route('admin.teachers.index') }}" class="row g-2 mb-3">
-    <div class="col-md-4">
-        <input type="text" name="q" class="form-control" placeholder="Cari nama, surel, NIP..." value="{{ $search }}">
+    <section class="directory-stats" aria-label="Ringkasan data guru">
+        <div class="directory-stat">
+            <span class="directory-stat__icon">
+                <i class="bi bi-person-workspace" aria-hidden="true"></i>
+            </span>
+            <div class="directory-stat__body">
+                <span class="directory-stat__label">Total Guru</span>
+                <span class="directory-stat__value">{{ $totalTeachers }}</span>
+            </div>
+        </div>
+        <div class="directory-stat">
+            <span class="directory-stat__icon">
+                <i class="bi bi-person-check-fill" aria-hidden="true"></i>
+            </span>
+            <div class="directory-stat__body">
+                <span class="directory-stat__label">Guru Aktif</span>
+                <span class="directory-stat__value">{{ $activeTeachers }}</span>
+            </div>
+        </div>
+        <div class="directory-stat">
+            <span class="directory-stat__icon">
+                <i class="bi bi-card-checklist" aria-hidden="true"></i>
+            </span>
+            <div class="directory-stat__body">
+                <span class="directory-stat__label">Memiliki NIP</span>
+                <span class="directory-stat__value">{{ $teachersWithNip }}</span>
+            </div>
+        </div>
+    </section>
+
+    <form method="GET" action="{{ route('admin.teachers.index') }}" class="directory-toolbar" role="search">
+        <div class="directory-search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input
+                type="search"
+                name="q"
+                class="form-control"
+                placeholder="Cari nama, email, atau NIP..."
+                value="{{ $search }}"
+                aria-label="Cari guru berdasarkan nama, email, atau NIP"
+            >
+        </div>
+
+        <button class="btn btn-primary directory-toolbar__button" type="submit">
+            <i class="bi bi-funnel me-1" aria-hidden="true"></i>
+            Terapkan
+        </button>
+
+        @if ($search !== '')
+            <a href="{{ route('admin.teachers.index') }}" class="btn btn-light directory-toolbar__reset">
+                Reset
+            </a>
+        @endif
+    </form>
+
+    <div class="directory-table-card">
+        @if ($teachers->isEmpty())
+            <div class="directory-empty">
+                <div class="directory-empty__icon">
+                    <i class="bi bi-person-x" aria-hidden="true"></i>
+                </div>
+                <h2 class="directory-empty__title">
+                    {{ $search !== '' ? 'Guru tidak ditemukan.' : 'Belum ada data guru.' }}
+                </h2>
+                <p class="directory-empty__description">
+                    @if ($search !== '')
+                        Coba gunakan kata kunci lain atau periksa kembali ejaan pencarian Anda.
+                    @else
+                        Mulai dengan menambahkan data guru pertama melalui tombol Tambah Guru.
+                    @endif
+                </p>
+                @if ($search !== '')
+                    <a href="{{ route('admin.teachers.index') }}" class="btn btn-outline-primary">
+                        Tampilkan Semua
+                    </a>
+                @else
+                    <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary">
+                        Tambah Guru
+                    </a>
+                @endif
+            </div>
+        @else
+            <div class="table-responsive">
+                <table class="directory-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Guru</th>
+                            <th scope="col">NIP</th>
+                            <th scope="col">No. Telepon</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($teachers as $teacher)
+                            @php
+                                $name = $teacher->user?->name ?? 'Tanpa Nama';
+                            @endphp
+                            <tr>
+                                <td>
+                                    <div class="directory-person">
+                                        <span class="directory-avatar directory-avatar--teacher" aria-hidden="true">
+                                            {{ $teacher->user?->initials ?? '?' }}
+                                        </span>
+                                        <div>
+                                            <div class="directory-person__name">{{ $name }}</div>
+                                            <div class="directory-person__meta">{{ $teacher->user?->email ?? '-' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ $teacher->nip ?: '-' }}</td>
+                                <td>{{ $teacher->phone ?: '-' }}</td>
+                                <td>
+                                    @if ($teacher->user?->is_active)
+                                        <span class="directory-badge directory-badge--active">Aktif</span>
+                                    @else
+                                        <span class="directory-badge directory-badge--inactive">Nonaktif</span>
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    <div class="directory-actions">
+                                        <a
+                                            href="{{ route('admin.teachers.show', $teacher) }}"
+                                            class="directory-action directory-action--view"
+                                            title="Lihat {{ $name }}"
+                                            aria-label="Lihat {{ $name }}"
+                                        >
+                                            <i class="bi bi-eye" aria-hidden="true"></i>
+                                        </a>
+                                        <a
+                                            href="{{ route('admin.teachers.edit', $teacher) }}"
+                                            class="directory-action directory-action--edit"
+                                            title="Ubah {{ $name }}"
+                                            aria-label="Ubah {{ $name }}"
+                                        >
+                                            <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                        </a>
+                                        <form
+                                            action="{{ route('admin.teachers.destroy', $teacher) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Yakin ingin menghapus data guru ini?');"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+                                            <button
+                                                type="submit"
+                                                class="directory-action directory-action--delete"
+                                                title="Hapus {{ $name }}"
+                                                aria-label="Hapus {{ $name }}"
+                                            >
+                                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            @if ($teachers->hasPages())
+                <div class="directory-pagination p-3">
+                    {{ $teachers->links('pagination::bootstrap-5') }}
+                </div>
+            @endif
+        @endif
     </div>
-    <div class="col-md-2">
-        <button class="btn btn-outline-secondary" type="submit">Cari</button>
-    </div>
-</form>
-
-<div class="table-responsive">
-    <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <th>Nama</th>
-                <th>Surel</th>
-                <th>NIP</th>
-                <th>No. Telepon</th>
-                <th class="text-end">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($teachers as $teacher)
-                <tr>
-                    <td>{{ $teacher->user?->name }}</td>
-                    <td>{{ $teacher->user?->email }}</td>
-                    <td>{{ $teacher->nip }}</td>
-                    <td>{{ $teacher->phone }}</td>
-                    <td class="text-end">
-                        <a href="{{ route('admin.teachers.show', $teacher) }}" class="btn btn-sm btn-outline-info">Lihat</a>
-                        <a href="{{ route('admin.teachers.edit', $teacher) }}" class="btn btn-sm btn-outline-primary">Ubah</a>
-                        <form action="{{ route('admin.teachers.destroy', $teacher) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data guru ini?');">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger">Hapus</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" class="text-center text-muted">Tidak ada data guru.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
 </div>
-
-{{ $teachers->links() }}
 @endsection

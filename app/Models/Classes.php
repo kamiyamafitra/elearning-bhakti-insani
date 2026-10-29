@@ -39,4 +39,19 @@ class Classes extends Model
     {
         return $this->hasMany(ClassMembership::class, 'class_id');
     }
+
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(ClassSchedule::class, 'class_id');
+    }
+
+    public function learningMaterials(): HasMany
+    {
+        return $this->hasMany(LearningMaterial::class, 'class_id');
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(Assignment::class, 'class_id');
+    }
 }

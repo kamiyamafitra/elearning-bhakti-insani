@@ -21,6 +21,10 @@
                 <div class="fw-semibold">{{ $user->name }}</div>
             </div>
             <div class="col-md-6">
+                <div class="text-muted small">Username</div>
+                <div class="fw-semibold">{{ $user->username }}</div>
+            </div>
+            <div class="col-md-6">
                 <div class="text-muted small">Surel</div>
                 <div class="fw-semibold">{{ $user->email }}</div>
             </div>

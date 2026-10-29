@@ -81,16 +81,44 @@
     </style>
 </head>
 <body>
+    @php
+        $currentUser = auth()->user();
+        $dashboardRoute = match ($currentUser?->role) {
+            'admin' => 'admin.dashboard',
+            'teacher' => 'teacher.dashboard',
+            'student' => 'student.dashboard',
+            default => 'login',
+        };
+        $profileUrl = match ($currentUser?->role) {
+            'admin' => $currentUser ? route('admin.users.show', $currentUser) : null,
+            'teacher' => route('teacher.profile.edit'),
+            'student' => route('student.profile.edit'),
+            default => null,
+        };
+        $announcementsUrl = match ($currentUser?->role) {
+            'admin' => route('admin.announcements.index'),
+            'teacher' => route('teacher.announcements.index'),
+            'student' => route('student.announcements.index'),
+            default => null,
+        };
+    @endphp
     <header class="topbar sticky-top">
         <nav class="navbar navbar-expand-lg">
             <div class="container-fluid">
                 <button class="btn btn-link text-dark d-lg-none me-2" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu"><i class="bi bi-list fs-4"></i></button>
-                <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route($dashboardRoute) }}">
                     <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width:38px;height:38px;background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);"><i class="bi bi-mortarboard-fill text-white"></i></span>
                     <span class="fw-semibold" style="color: var(--sb-primary-dark);">SMK BHAKTI INSANI BOGOR</span>
                 </a>
                 <div class="ms-auto d-flex align-items-center gap-3">
-                    <button class="btn btn-light position-relative border-0" style="background:var(--sb-primary-light);"><i class="bi bi-bell" style="color:var(--sb-primary-navy);"></i><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span></button>
+                    @if ($announcementsUrl)
+                        <a href="{{ $announcementsUrl }}" class="btn btn-light position-relative border-0" style="background:var(--sb-primary-light);" aria-label="Lihat pengumuman">
+                            <i class="bi bi-bell" style="color:var(--sb-primary-navy);"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $layoutAnnouncementCount ?? 0 }}</span>
+                        </a>
+                    @else
+                        <button type="button" class="btn btn-light position-relative border-0" style="background:var(--sb-primary-light);" aria-label="Pengumuman"><i class="bi bi-bell" style="color:var(--sb-primary-navy);"></i><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span></button>
+                    @endif
                     <div class="dropdown">
                         <button class="btn dropdown-toggle d-flex align-items-center gap-2 border-0" data-bs-toggle="dropdown" style="background:var(--sb-primary-light);">
                             <span class="rounded-circle text-white d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px;background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);">{{ strtoupper(substr(auth()->user()->name ?? 'U',0,1)) }}</span>
@@ -100,8 +128,12 @@
                             </div>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profil</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Pengaturan Akun</a></li>
+                            @if ($profileUrl)
+                                <li><a class="dropdown-item" href="{{ $profileUrl }}"><i class="bi bi-person me-2"></i>Profil Saya</a></li>
+                            @endif
+                            @if ($announcementsUrl)
+                                <li><a class="dropdown-item" href="{{ $announcementsUrl }}"><i class="bi bi-megaphone me-2"></i>Pengumuman</a></li>
+                            @endif
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Keluar</button></form>
@@ -119,10 +151,12 @@
                 <div class="pt-3">@yield('sidebar')</div>
             </aside>
             <main class="col-lg-10 col-md-9 ms-sm-auto px-md-4 py-4">
-                <div class="mb-4">
-                    <h1 class="h3 mb-1">@yield('page-title')</h1>
-                    <p class="mb-0" style="color:var(--sb-text-secondary);">@yield('page-description')</p>
-                </div>
+                @hasSection('page-title')
+                    <div class="mb-4">
+                        <h1 class="h3 mb-1">@yield('page-title')</h1>
+                        <p class="mb-0" style="color:var(--sb-text-secondary);">@yield('page-description')</p>
+                    </div>
+                @endif
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
                 @endif
@@ -142,5 +176,6 @@
             <small>&copy; {{ date('Y') }} SMK Bhakti Insani Bogor</small>
         </div>
     </footer>
+    @stack('scripts')
 </body>
 </html>

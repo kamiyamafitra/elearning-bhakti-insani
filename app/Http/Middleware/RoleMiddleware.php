@@ -12,7 +12,7 @@ class RoleMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
@@ -22,7 +22,7 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        if (property_exists($user, 'is_active') && $user->is_active === false) {
+        if ($user->is_active === false) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -34,13 +34,9 @@ class RoleMiddleware
             return $next($request);
         }
 
-        if (isset($user->role) && in_array($user->role, $roles, true)) {
+        if (in_array($user->role, $roles, true)) {
             return $next($request);
         }
-
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
 
         abort(403, 'Anda tidak memiliki akses ke halaman ini.');
     }

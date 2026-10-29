@@ -1,80 +1,97 @@
 @extends('admin.layouts.dashboard')
 
 @section('title', 'Tambah Siswa')
-@section('page-title', 'Tambah Siswa')
-@section('page-description', 'Tambahkan data siswa baru beserta akun pengguna.')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <a href="{{ route('admin.students.index') }}" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i> Kembali</a>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center gap-3 pt-2 pb-3 mb-3 border-bottom">
+    <div>
+        <h1 class="h3 mb-1">Tambah Data Siswa</h1>
+        <p class="mb-0" style="color: var(--sb-text-secondary);">Lengkapi data akun dan profil siswa baru.</p>
+    </div>
+    <a href="{{ route('admin.students.index') }}" class="btn btn-outline-secondary">Kembali</a>
 </div>
 
-<div class="card card-dashboard">
-    <div class="card-header bg-white border-0">
-        <h5 class="mb-0">Form Siswa</h5>
-    </div>
+<div class="card shadow-sm">
     <div class="card-body">
-        <form method="POST" action="{{ route('admin.students.store') }}">
+        <form class="admin-form" method="POST" action="{{ route('admin.students.store') }}">
             @csrf
-            <h6 class="text-muted mb-3">Data Akun</h6>
+
+            <h2 class="admin-form__section-title">Data Akun</h2>
+
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+                    <label class="form-label" for="name">Nama Lengkap</label>
+                    <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" autocomplete="name" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Surel <span class="text-danger">*</span></label>
-                    <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
+                    <label class="form-label" for="email">Surel</label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" autocomplete="email" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Kata Sandi <span class="text-danger">*</span></label>
-                    <input type="password" name="password" class="form-control" required>
+                    <label class="form-label" for="password">Kata Sandi</label>
+                    <input type="password" id="password" name="password" class="form-control" autocomplete="new-password" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Konfirmasi Kata Sandi <span class="text-danger">*</span></label>
-                    <input type="password" name="password_confirmation" class="form-control" required>
+                    <label class="form-label" for="password_confirmation">Konfirmasi Kata Sandi</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" autocomplete="new-password" required>
                 </div>
             </div>
-            <hr class="my-4">
-            <h6 class="text-muted mb-3">Data Siswa</h6>
+
+            <h2 class="admin-form__section-title">Data Siswa</h2>
+
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">NISN</label>
-                    <input type="text" name="nisn" class="form-control" value="{{ old('nisn') }}">
+                    <label class="form-label" for="nisn">NISN</label>
+                    <input type="text" id="nisn" name="nisn" class="form-control" value="{{ old('nisn') }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">NIS</label>
-                    <input type="text" name="nis" class="form-control" value="{{ old('nis') }}">
+                    <label class="form-label" for="nis">NIS</label>
+                    <input type="text" id="nis" name="nis" class="form-control" value="{{ old('nis') }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Kelas</label>
-                    <select name="class_id" class="form-select">
+                    <label class="form-label" for="class_id">Kelas</label>
+                    <select id="class_id" name="class_id" class="form-select">
                         <option value="">-- Pilih Kelas --</option>
                         @foreach ($classes as $class)
-                            <option value="{{ $class->id }}" @selected(old('class_id')==$class->id)>{{ $class->name }}</option>
+                            <option value="{{ $class->id }}" @selected(old('class_id') == $class->id)>{{ $class->name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Jenis Kelamin</label>
-                    <select name="gender" class="form-select">
+                    <label class="form-label" for="gender">Jenis Kelamin</label>
+                    <select id="gender" name="gender" class="form-select">
                         <option value="">-- Pilih --</option>
-                        <option value="L" @selected(old('gender')==='L')>Laki-laki</option>
-                        <option value="P" @selected(old('gender')==='P')>Perempuan</option>
+                        <option value="L" @selected(old('gender') === 'L')>Laki-laki</option>
+                        <option value="P" @selected(old('gender') === 'P')>Perempuan</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Tanggal Lahir</label>
-                    <input type="date" name="birth_date" class="form-control" value="{{ old('birth_date') }}">
+                    <label class="form-label" for="birth_date">Tanggal Lahir</label>
+                    <input type="date" id="birth_date" name="birth_date" class="form-control" value="{{ old('birth_date') }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">No. Telepon</label>
-                    <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
+                    <label class="form-label" for="phone">No. Telepon</label>
+                    <input type="text" id="phone" name="phone" class="form-control" value="{{ old('phone') }}">
                 </div>
                 <div class="col-12">
-                    <label class="form-label">Alamat</label>
-                    <textarea name="address" class="form-control" rows="2">{{ old('address') }}</textarea>
+                    <label class="form-label" for="address">Alamat</label>
+                    <textarea id="address" name="address" class="form-control" rows="3">{{ old('address') }}</textarea>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Nama Orang Tua/Wali</label>
-                    <input type="
+                    <label class="form-label" for="parent_name">Nama Orang Tua/Wali</label>
+                    <input type="text" id="parent_name" name="parent_name" class="form-control" value="{{ old('parent_name') }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="parent_phone">No. Telepon Orang Tua/Wali</label>
+                    <input type="text" id="parent_phone" name="parent_phone" class="form-control" value="{{ old('parent_phone') }}">
+                </div>
+            </div>
+
+            <div class="admin-form__actions">
+                <button type="submit" class="btn btn-primary">Simpan</button>
+                <a href="{{ route('admin.students.index') }}" class="btn btn-outline-secondary">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

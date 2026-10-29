@@ -17,26 +17,50 @@ class StudentController extends Controller
 {
     public function index(Request $request): View
     {
-        $search = $request->input('q');
+        $search = trim((string) $request->input('q', ''));
+        $classId = $request->integer('class_id') ?: null;
 
-        $students = StudentProfile::with(['user', 'class'])
-            ->when($search, function ($query, $search) {
-                $query->whereHas('user', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                })->orWhere('nisn', 'like', "%{$search}%")
-                    ->orWhere('nis', 'like', "%{$search}%");
+        $students = StudentProfile::with([
+            'user:id,name,email',
+            'class:id,name',
+        ])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->whereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    })->orWhere('nisn', 'like', "%{$search}%")
+                        ->orWhere('nis', 'like', "%{$search}%");
+                });
             })
+            ->when($classId, fn ($query) => $query->where('class_id', $classId))
             ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.students.index', compact('students', 'search'));
+        $classes = Classes::with('academicYear:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'academic_year_id']);
+
+        $totalStudents = StudentProfile::count();
+        $studentsWithClass = StudentProfile::whereNotNull('class_id')->count();
+        $classesWithStudents = Classes::whereHas('students')->count();
+
+        return view('admin.students.index', compact(
+            'students',
+            'search',
+            'classes',
+            'classId',
+            'totalStudents',
+            'studentsWithClass',
+            'classesWithStudents',
+        ));
     }
 
     public function create(): View
     {
         $classes = Classes::orderBy('name')->get();
+
         return view('admin.students.create', compact('classes'));
     }
 
@@ -86,6 +110,7 @@ class StudentController extends Controller
     public function show(StudentProfile $student): View
     {
         $student->load(['user', 'class']);
+
         return view('admin.students.show', compact('student'));
     }
 
@@ -93,6 +118,7 @@ class StudentController extends Controller
     {
         $student->load(['user']);
         $classes = Classes::orderBy('name')->get();
+
         return view('admin.students.edit', compact('student', 'classes'));
     }
 

@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -21,6 +21,7 @@ class UserController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
@@ -38,8 +39,11 @@ class UserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $request->merge(['username' => Str::lower(trim((string) $request->input('username')))]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', Rule::in(['admin', 'teacher', 'student'])],
@@ -48,6 +52,7 @@ class UserController extends Controller
 
         User::create([
             'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
@@ -69,8 +74,11 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        $request->merge(['username' => Str::lower(trim((string) $request->input('username')))]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9._-]+$/', Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
             'role' => ['required', Rule::in(['admin', 'teacher', 'student'])],
@@ -79,6 +87,7 @@ class UserController extends Controller
 
         $data = [
             'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
             'role' => $validated['role'],
             'is_active' => $request->boolean('is_active'),

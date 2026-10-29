@@ -8,27 +8,32 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+        <a class="nav-link {{ request()->routeIs('student.subjects.*') ? 'active' : '' }}" href="{{ route('student.subjects.index') }}">
             <i class="bi bi-journal-code"></i> Mata Pelajaran Saya
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
-            <i class="bi bi-patch-question"></i> Kuis & Ujian
+        <a class="nav-link {{ request()->routeIs('student.quizzes.*') ? 'active' : '' }}" href="{{ route('student.quizzes.index') }}">
+            <i class="bi bi-patch-question"></i> Kuis &amp; Ujian
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+        <a class="nav-link {{ request()->routeIs('student.grades.*') ? 'active' : '' }}" href="{{ route('student.grades.index') }}">
             <i class="bi bi-award"></i> Nilai Saya
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+        <a class="nav-link {{ request()->routeIs('student.discussions.*') ? 'active' : '' }}" href="{{ route('student.discussions.index') }}">
             <i class="bi bi-chat-dots"></i> Diskusi
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+        <a class="nav-link {{ request()->routeIs('student.announcements.*') ? 'active' : '' }}" href="{{ route('student.announcements.index') }}">
+            <i class="bi bi-megaphone"></i> Pengumuman
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('student.profile.*') ? 'active' : '' }}" href="{{ route('student.profile.edit') }}">
             <i class="bi bi-person"></i> Profil Saya
         </a>
     </li>

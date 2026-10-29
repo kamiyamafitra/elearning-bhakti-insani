@@ -12,6 +12,9 @@
     <div class="card-body">
         <form method="POST" action="{{ route('admin.subjects.store') }}">
             @csrf
+
+            <h2 class="h6 text-uppercase fw-bold mb-3" style="color: #64748B;">Informasi Mata Pelajaran</h2>
+
             <div class="mb-3">
                 <label class="form-label">Kode Mata Pelajaran</label>
                 <input type="text" name="code" class="form-control" value="{{ old('code') }}" required>
@@ -20,11 +23,17 @@
                 <label class="form-label">Nama Mata Pelajaran</label>
                 <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
             </div>
-            <div class="mb-3">
+            <div class="mb-4">
                 <label class="form-label">Deskripsi</label>
                 <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
             </div>
-            <button class="btn btn-primary">Simpan</button>
+
+            @include('admin.subjects.partials.schedule-editor', [
+                'classes' => $classes,
+                'teachers' => $teachers,
+            ])
+
+            <button class="btn btn-primary mt-4">Simpan</button>
         </form>
     </div>
 </div>

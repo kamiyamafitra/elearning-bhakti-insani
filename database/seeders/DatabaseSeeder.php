@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@smkbhaktiinsani.sch.id'],
             [
                 'name' => 'Administrator',
+                'username' => 'admin',
                 'password' => Hash::make('admin123'),
                 'role' => 'admin',
                 'is_active' => true,
@@ -32,6 +33,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'guru@smkbhaktiinsani.sch.id'],
             [
                 'name' => 'Guru Demo',
+                'username' => 'guru',
                 'password' => Hash::make('guru123'),
                 'role' => 'teacher',
                 'is_active' => true,
@@ -76,6 +78,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'siswa@smkbhaktiinsani.sch.id'],
             [
                 'name' => 'Siswa Demo',
+                'username' => 'siswa',
                 'password' => Hash::make('siswa123'),
                 'role' => 'student',
                 'is_active' => true,

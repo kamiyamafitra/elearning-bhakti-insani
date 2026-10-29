@@ -5,21 +5,25 @@
 @section('page-description', 'Informasi lengkap data siswa.')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="mb-4">
     <a href="{{ route('admin.students.index') }}" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i> Kembali</a>
-    <a href="{{ route('admin.students.edit', $student) }}" class="btn btn-primary"><i class="bi bi-pencil me-1"></i> Ubah</a>
 </div>
 
 <div class="row g-3">
     <div class="col-lg-4">
-        <div class="card card-dashboard h-100">
-            <div class="card-body text-center">
-                <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px;">
+        <div class="card card-dashboard h-100 d-flex flex-column">
+            <div class="card-body text-center d-flex flex-column justify-content-center flex-grow-1">
+                <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3 align-self-center" style="width: 72px; height: 72px;">
                     <span class="fs-3">{{ strtoupper(substr($student->user->name, 0, 1)) }}</span>
                 </span>
-                <h5 class="mb-1">{{ $student->user->name }}</h5>
-                <p class="text-muted mb-0">{{ $student->user->email }}</p>
-                <span class="badge text-bg-light mt-2">Siswa</span>
+                <h5 class="mb-1 text-break">{{ $student->user->name }}</h5>
+                <p class="text-muted mb-0 text-break">{{ $student->user->email }}</p>
+                <span class="badge text-bg-light mt-2 align-self-center">Siswa</span>
+            </div>
+            <div class="card-body border-top">
+                <a href="{{ route('admin.students.edit', $student) }}" class="btn btn-primary w-100">
+                    <i class="bi bi-pencil-square me-1"></i> Ubah Data Siswa
+                </a>
             </div>
         </div>
     </div>

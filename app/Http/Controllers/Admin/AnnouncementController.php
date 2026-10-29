@@ -4,19 +4,21 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\Classes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AnnouncementController extends Controller
 {
     public function index(Request $request): View
     {
-        $search = $request->input('q');
+        $search = trim((string) $request->input('q', ''));
 
-        $announcements = Announcement::with('creator')
-            ->when($search, function ($query, $search) {
+        $announcements = Announcement::with(['creator:id,name', 'class:id,name'])
+            ->when($search !== '', function ($query) use ($search) {
                 $query->where('title', 'like', "%{$search}%");
             })
             ->orderByDesc('created_at')
@@ -28,7 +30,9 @@ class AnnouncementController extends Controller
 
     public function create(): View
     {
-        return view('admin.announcements.create');
+        $classes = Classes::orderBy('name')->get(['id', 'name']);
+
+        return view('admin.announcements.create', compact('classes'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -36,8 +40,13 @@ class AnnouncementController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'content' => ['required', 'string'],
-            'visibility' => ['required', 'in:all,role,class'],
-            'target_role' => ['nullable', 'in:teacher,student'],
+            'visibility' => ['required', Rule::in([
+                Announcement::VISIBILITY_ALL,
+                Announcement::VISIBILITY_ROLE,
+                Announcement::VISIBILITY_CLASS,
+            ])],
+            'target_role' => ['nullable', 'required_if:visibility,role', Rule::in(['teacher', 'student'])],
+            'class_id' => ['nullable', 'required_if:visibility,class', 'exists:classes,id'],
             'is_published' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
         ]);
@@ -46,8 +55,12 @@ class AnnouncementController extends Controller
             'title' => $validated['title'],
             'content' => $validated['content'],
             'visibility' => $validated['visibility'],
-            'target_role' => $validated['target_role'] ?? null,
-            'class_id' => null,
+            'target_role' => $validated['visibility'] === Announcement::VISIBILITY_ROLE
+                ? ($validated['target_role'] ?? null)
+                : null,
+            'class_id' => $validated['visibility'] === Announcement::VISIBILITY_CLASS
+                ? ($validated['class_id'] ?? null)
+                : null,
             'created_by' => Auth::id(),
             'is_published' => $request->boolean('is_published'),
             'published_at' => $request->boolean('is_published') ? ($validated['published_at'] ?? now()) : null,
@@ -58,13 +71,16 @@ class AnnouncementController extends Controller
 
     public function show(Announcement $announcement): View
     {
-        $announcement->load('creator');
+        $announcement->load(['creator:id,name', 'class:id,name']);
+
         return view('admin.announcements.show', compact('announcement'));
     }
 
     public function edit(Announcement $announcement): View
     {
-        return view('admin.announcements.edit', compact('announcement'));
+        $classes = Classes::orderBy('name')->get(['id', 'name']);
+
+        return view('admin.announcements.edit', compact('announcement', 'classes'));
     }
 
     public function update(Request $request, Announcement $announcement): RedirectResponse
@@ -72,8 +88,13 @@ class AnnouncementController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'content' => ['required', 'string'],
-            'visibility' => ['required', 'in:all,role,class'],
-            'target_role' => ['nullable', 'in:teacher,student'],
+            'visibility' => ['required', Rule::in([
+                Announcement::VISIBILITY_ALL,
+                Announcement::VISIBILITY_ROLE,
+                Announcement::VISIBILITY_CLASS,
+            ])],
+            'target_role' => ['nullable', 'required_if:visibility,role', Rule::in(['teacher', 'student'])],
+            'class_id' => ['nullable', 'required_if:visibility,class', 'exists:classes,id'],
             'is_published' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
         ]);
@@ -82,8 +103,12 @@ class AnnouncementController extends Controller
             'title' => $validated['title'],
             'content' => $validated['content'],
             'visibility' => $validated['visibility'],
-            'target_role' => $validated['target_role'] ?? null,
-            'class_id' => null,
+            'target_role' => $validated['visibility'] === Announcement::VISIBILITY_ROLE
+                ? ($validated['target_role'] ?? null)
+                : null,
+            'class_id' => $validated['visibility'] === Announcement::VISIBILITY_CLASS
+                ? ($validated['class_id'] ?? null)
+                : null,
             'is_published' => $request->boolean('is_published'),
             'published_at' => $request->boolean('is_published') ? ($announcement->published_at ?? now()) : null,
         ]);

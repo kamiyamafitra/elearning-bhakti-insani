@@ -23,6 +23,10 @@
                     <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" name="username" class="form-control" value="{{ old('username', $user->username) }}" required>
+                </div>
+                <div class="col-md-6">
                     <label class="form-label">Surel <span class="text-danger">*</span></label>
                     <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
                 </div>

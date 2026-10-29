@@ -1,0 +1,122 @@
+@extends('student.layouts.dashboard')
+
+@section('title', 'Profil Saya')
+@section('page-title', 'Profil Saya')
+@section('page-description', 'Kelola informasi profil dan data kontak Anda.')
+
+@section('content')
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card card-dashboard h-100">
+            <div class="card-body text-center">
+                <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <span class="fs-3 fw-semibold">{{ $user->initials }}</span>
+                </span>
+                <h5 class="mb-1 text-break">{{ $user->name }}</h5>
+                <p class="text-muted mb-1 text-break">{{ $user->email }}</p>
+                <span class="badge text-bg-light mb-4">Siswa</span>
+
+                <ul class="list-group list-group-flush text-start">
+                    <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                        <span class="text-muted small">NIS</span>
+                        <span class="fw-semibold">{{ $student->nis ?: '-' }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                        <span class="text-muted small">NISN</span>
+                        <span class="fw-semibold">{{ $student->nisn ?: '-' }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                        <span class="text-muted small">Kelas</span>
+                        <span class="fw-semibold text-end text-break">{{ $student->class?->name ?? '-' }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                        <span class="text-muted small">Tahun Ajaran</span>
+                        <span class="fw-semibold text-end text-break">{{ $student->class?->academicYear?->name ?? '-' }}</span>
+                    </li>
+                </ul>
+
+                <div class="alert alert-info border-0 small text-start mt-3 mb-0">
+                    NIS, NISN, kelas, dan peran hanya dapat diubah oleh administrator.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card card-dashboard h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Ubah Profil</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ route('student.profile.update') }}">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="name">Nama Lengkap</label>
+                            <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $user->name) }}" required>
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="gender">Jenis Kelamin</label>
+                            <select id="gender" name="gender" class="form-select @error('gender') is-invalid @enderror">
+                                <option value="">-- Pilih --</option>
+                                <option value="L" @selected(old('gender', $student->gender) === 'L')>Laki-laki</option>
+                                <option value="P" @selected(old('gender', $student->gender) === 'P')>Perempuan</option>
+                            </select>
+                            @error('gender')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="birth_date">Tanggal Lahir</label>
+                            <input type="date" id="birth_date" name="birth_date" class="form-control @error('birth_date') is-invalid @enderror" value="{{ old('birth_date', $student->birth_date?->format('Y-m-d')) }}">
+                            @error('birth_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="phone">No. Telepon</label>
+                            <input type="text" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $student->phone) }}" inputmode="tel">
+                            @error('phone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="address">Alamat</label>
+                            <textarea id="address" name="address" class="form-control @error('address') is-invalid @enderror" rows="3">{{ old('address', $student->address) }}</textarea>
+                            @error('address')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="parent_name">Nama Orang Tua/Wali</label>
+                            <input type="text" id="parent_name" name="parent_name" class="form-control @error('parent_name') is-invalid @enderror" value="{{ old('parent_name', $student->parent_name) }}">
+                            @error('parent_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="parent_phone">No. Telepon Orang Tua/Wali</label>
+                            <input type="text" id="parent_phone" name="parent_phone" class="form-control @error('parent_phone') is-invalid @enderror" value="{{ old('parent_phone', $student->parent_phone) }}" inputmode="tel">
+                            @error('parent_phone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2-circle me-1" aria-hidden="true"></i> Simpan Perubahan
+                        </button>
+                        <a href="{{ route('student.dashboard') }}" class="btn btn-outline-secondary">Batal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

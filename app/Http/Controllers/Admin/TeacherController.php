@@ -16,20 +16,32 @@ class TeacherController extends Controller
 {
     public function index(Request $request): View
     {
-        $search = $request->input('q');
+        $search = trim((string) $request->input('q', ''));
 
-        $teachers = TeacherProfile::with('user')
-            ->when($search, function ($query, $search) {
-                $query->whereHas('user', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                })->orWhere('nip', 'like', "%{$search}%");
+        $teachers = TeacherProfile::with('user:id,name,email,is_active')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->whereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    })->orWhere('nip', 'like', "%{$search}%");
+                });
             })
             ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.teachers.index', compact('teachers', 'search'));
+        $totalTeachers = TeacherProfile::count();
+        $activeTeachers = TeacherProfile::whereHas('user', fn ($query) => $query->where('is_active', true))->count();
+        $teachersWithNip = TeacherProfile::whereNotNull('nip')->count();
+
+        return view('admin.teachers.index', compact(
+            'teachers',
+            'search',
+            'totalTeachers',
+            'activeTeachers',
+            'teachersWithNip',
+        ));
     }
 
     public function create(): View
@@ -71,12 +83,14 @@ class TeacherController extends Controller
     public function show(TeacherProfile $teacher): View
     {
         $teacher->load('user');
+
         return view('admin.teachers.show', compact('teacher'));
     }
 
     public function edit(TeacherProfile $teacher): View
     {
         $teacher->load('user');
+
         return view('admin.teachers.edit', compact('teacher'));
     }
 
