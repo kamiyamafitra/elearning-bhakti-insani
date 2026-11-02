@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Assignment;
 use App\Models\Classes;
 use App\Models\ClassSchedule;
+use App\Models\Discussion;
+use App\Models\LearningMaterial;
+use App\Models\Quiz;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -145,6 +149,15 @@ class SubjectController extends Controller
 
     public function destroy(Subject $subject): RedirectResponse
     {
+        $hasCourseData = Assignment::where('subject_id', $subject->id)->exists()
+            || LearningMaterial::where('subject_id', $subject->id)->exists()
+            || Quiz::where('subject_id', $subject->id)->exists()
+            || Discussion::where('subject_id', $subject->id)->exists();
+
+        if ($hasCourseData) {
+            return back()->with('error', 'Mata pelajaran tidak dapat dihapus karena masih memiliki materi, tugas, kuis, atau diskusi.');
+        }
+
         DB::transaction(function () use ($subject): void {
             $subject->teachingAssignments()->delete();
             $subject->delete();

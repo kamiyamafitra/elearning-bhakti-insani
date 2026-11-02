@@ -3,84 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'E-Learning SMK Bhakti Insani Bogor')</title>
+    <title>@yield('title', 'E-Learning '.$school->fullName())</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        :root {
-            --sb-primary:#2563EB;--sb-primary-dark:#1E3A8A;--sb-primary-navy:#1E40AF;--sb-primary-light:#DBEAFE;--sb-bg:#EFF6FF;--sb-surface:#FFFFFF;--sb-text:#1E293B;--sb-text-secondary:#64748B;--sb-border:#DBEAFE;
-        }
-        body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Open Sans','Helvetica Neue',sans-serif;background:var(--sb-bg);color:var(--sb-text);font-weight:400;line-height:1.6}
-        h1, h2, h3, h4, h5, h6,
-        .h1, .h2, .h3, .h4, .h5, .h6,
-        .page-title, .section-title, .card-title {
-            font-weight: 600;
-            letter-spacing: -0.01em;
-        }
-        .navbar-brand,
-        .sidebar .nav-link,
-        .menu-label {
-            font-weight: 600;
-        }
-        .btn-primary,
-        .btn,
-        button[type="submit"],
-        .form-action,
-        .action-label {
-            font-weight: 600;
-        }
-        .table thead th,
-        th {
-            font-weight: 600;
-        }
-        label,
-        .form-label {
-            font-weight: 500;
-        }
-        .text-secondary,
-        .text-muted,
-        .supporting-text,
-        .descriptive-text,
-        .date,
-        .timestamp,
-        small,
-        .form-text {
-            font-weight: 300;
-        }
-        .table td,
-        .table tbody td,
-        .content,
-        p {
-            font-weight: 400;
-        }
-        .topbar{background:var(--sb-surface);border-bottom:1px solid var(--sb-border);box-shadow:0 1px 2px rgba(30,58,138,.02);z-index:1030}
-        .sidebar{background:var(--sb-primary-dark);min-height:calc(100vh - 56px)}
-        .sidebar .nav-link{color:rgba(255,255,255,.92);border-radius:.5rem;margin:.25rem .75rem;display:flex;align-items:center;gap:.625rem;padding:.625rem .875rem;text-decoration:none}
-        .sidebar .nav-link i{color:rgba(219,234,254,.9);font-size:1.05rem}
-        .sidebar .nav-link:hover{background:rgba(37,99,235,.9);color:#fff}
-        .sidebar .nav-link.active{background:var(--sb-primary);color:#fff;font-weight:600;box-shadow:inset 3px 0 0 rgba(219,234,254,.9)}
-        .sidebar .nav-link.active i{color:#fff}
-        .card-dashboard{background:var(--sb-surface);border:1px solid var(--sb-border);box-shadow:0 10px 30px rgba(30,58,138,.04);border-radius:.875rem}
-        .card-dashboard .card-header{background:transparent;border-bottom:1px solid var(--sb-border)}
-        .stat-icon{width:52px;height:52px;border-radius:.875rem;display:flex;align-items:center;justify-content:center;background:var(--sb-primary-light);color:var(--sb-primary)}
-        .btn-primary{background:var(--sb-primary);border-color:var(--sb-primary)}
-        .btn-primary:hover{background:var(--sb-primary-navy);border-color:var(--sb-primary-navy)}
-        .btn-outline-primary{color:var(--sb-primary);border-color:rgba(37,99,235,.4)}
-        .btn-outline-primary:hover{background:var(--sb-primary-light);color:var(--sb-primary-navy);border-color:var(--sb-primary)}
-        .table thead.table-light th{background:linear-gradient(90deg,rgba(219,234,254,.7) 0%,rgba(239,246,255,.9) 100%);color:var(--sb-primary-dark);border-bottom:1px solid var(--sb-border)}
-        .table-hover tbody tr:hover{background:rgba(239,246,255,.8)}
-        .badge.text-bg-light{background:var(--sb-primary-light)!important;color:var(--sb-primary-navy)!important}
-        .badge.text-bg-primary{background:var(--sb-primary)!important}
-        .form-control:focus,.form-select:focus{border-color:rgba(37,99,235,.6);box-shadow:0 0 0 .25rem rgba(37,99,235,.08)}
-        .nav-tabs .nav-link.active{color:var(--sb-primary);border-color:var(--sb-border) var(--sb-border) #fff}
-        .nav-tabs .nav-link{color:var(--sb-text-secondary)}
-        footer{background:var(--sb-surface);border-top:1px solid var(--sb-border)}
-    </style>
 </head>
-<body>
+<body class="app-body">
     @php
         $currentUser = auth()->user();
         $dashboardRoute = match ($currentUser?->role) {
@@ -90,7 +20,7 @@
             default => 'login',
         };
         $profileUrl = match ($currentUser?->role) {
-            'admin' => $currentUser ? route('admin.users.show', $currentUser) : null,
+            'admin' => route('admin.profile.edit'),
             'teacher' => route('teacher.profile.edit'),
             'student' => route('student.profile.edit'),
             default => null,
@@ -101,81 +31,99 @@
             'student' => route('student.announcements.index'),
             default => null,
         };
+        $roleLabel = match ($currentUser?->role) {
+            'admin' => 'Administrator',
+            'teacher' => 'Guru',
+            'student' => 'Siswa',
+            default => '',
+        };
+        $announcementCount = $layoutAnnouncementCount ?? 0;
     @endphp
-    <header class="topbar sticky-top">
-        <nav class="navbar navbar-expand-lg">
-            <div class="container-fluid">
-                <button class="btn btn-link text-dark d-lg-none me-2" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu"><i class="bi bi-list fs-4"></i></button>
-                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route($dashboardRoute) }}">
-                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width:38px;height:38px;background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);"><i class="bi bi-mortarboard-fill text-white"></i></span>
-                    <span class="fw-semibold" style="color: var(--sb-primary-dark);">SMK BHAKTI INSANI BOGOR</span>
+
+    <div class="app-shell">
+        <aside class="app-sidebar offcanvas-lg offcanvas-start" id="sidebarMenu" tabindex="-1" aria-label="Menu navigasi">
+            <div class="app-sidebar__brand">
+                <a href="{{ route($dashboardRoute) }}" class="app-brand">
+                    <span class="app-brand__logo" aria-hidden="true">@if ($school->logoUrl())<img src="{{ $school->logoUrl() }}" alt="">@else<i class="bi bi-mortarboard-fill" aria-hidden="true"></i>@endif</span>
+                    <span class="app-brand__text">
+                        <span class="app-brand__name">{{ $school->name }}</span>
+                        <span class="app-brand__tagline">{{ trim('E-Learning '.$school->city) }}</span>
+                    </span>
                 </a>
-                <div class="ms-auto d-flex align-items-center gap-3">
+                <button type="button" class="btn-close d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Tutup menu"></button>
+            </div>
+            <nav class="app-sidebar__nav sidebar">
+                @yield('sidebar')
+            </nav>
+        </aside>
+
+        <div class="app-main">
+            <header class="app-topbar topbar">
+                <button class="app-topbar__toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-label="Buka menu">
+                    <i class="bi bi-list" aria-hidden="true"></i>
+                </button>
+                <a class="app-topbar__brand d-lg-none" href="{{ route($dashboardRoute) }}">{{ $school->name }}</a>
+
+                <div class="app-topbar__actions">
                     @if ($announcementsUrl)
-                        <a href="{{ $announcementsUrl }}" class="btn btn-light position-relative border-0" style="background:var(--sb-primary-light);" aria-label="Lihat pengumuman">
-                            <i class="bi bi-bell" style="color:var(--sb-primary-navy);"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $layoutAnnouncementCount ?? 0 }}</span>
+                        <a href="{{ $announcementsUrl }}" class="app-icon-button" aria-label="Lihat pengumuman ({{ $announcementCount }})">
+                            <i class="bi bi-bell" aria-hidden="true"></i>
+                            @if ($announcementCount > 0)
+                                <span class="app-icon-button__badge">{{ $announcementCount }}</span>
+                            @endif
                         </a>
-                    @else
-                        <button type="button" class="btn btn-light position-relative border-0" style="background:var(--sb-primary-light);" aria-label="Pengumuman"><i class="bi bi-bell" style="color:var(--sb-primary-navy);"></i><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span></button>
                     @endif
                     <div class="dropdown">
-                        <button class="btn dropdown-toggle d-flex align-items-center gap-2 border-0" data-bs-toggle="dropdown" style="background:var(--sb-primary-light);">
-                            <span class="rounded-circle text-white d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px;background:linear-gradient(135deg,#2563EB 0%,#1E40AF 100%);">{{ strtoupper(substr(auth()->user()->name ?? 'U',0,1)) }}</span>
-                            <div class="text-start d-none d-md-block">
-                                <div class="fw-semibold small">{{ auth()->user()->name ?? '' }}</div>
-                                <div class="small text-capitalize" style="color:var(--sb-text-secondary);">{{ auth()->user()->role ?? '' }}</div>
-                            </div>
+                        <button class="app-user-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="app-avatar" aria-hidden="true">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 1)) }}</span>
+                            <span class="app-user-button__text d-none d-md-flex">
+                                <span class="app-user-button__name">{{ $currentUser->name ?? '' }}</span>
+                                <span class="app-user-button__role">{{ $roleLabel }}</span>
+                            </span>
+                            <i class="bi bi-chevron-down app-user-button__chevron" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             @if ($profileUrl)
-                                <li><a class="dropdown-item" href="{{ $profileUrl }}"><i class="bi bi-person me-2"></i>Profil Saya</a></li>
+                                <li><a class="dropdown-item" href="{{ $profileUrl }}"><i class="bi bi-person me-2" aria-hidden="true"></i>Profil Saya</a></li>
                             @endif
                             @if ($announcementsUrl)
-                                <li><a class="dropdown-item" href="{{ $announcementsUrl }}"><i class="bi bi-megaphone me-2"></i>Pengumuman</a></li>
+                                <li><a class="dropdown-item" href="{{ $announcementsUrl }}"><i class="bi bi-megaphone me-2" aria-hidden="true"></i>Pengumuman</a></li>
                             @endif
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="POST" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Keluar</button></form>
+                                <form method="POST" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Keluar</button></form>
                             </li>
                         </ul>
                     </div>
                 </div>
-            </div>
-        </nav>
-    </header>
+            </header>
 
-    <div class="container-fluid">
-        <div class="row">
-            <aside class="col-lg-2 col-md-3 d-lg-block collapse sidebar px-0" id="sidebarMenu">
-                <div class="pt-3">@yield('sidebar')</div>
-            </aside>
-            <main class="col-lg-10 col-md-9 ms-sm-auto px-md-4 py-4">
+            <main class="app-content">
                 @hasSection('page-title')
-                    <div class="mb-4">
-                        <h1 class="h3 mb-1">@yield('page-title')</h1>
-                        <p class="mb-0" style="color:var(--sb-text-secondary);">@yield('page-description')</p>
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-header__title">@yield('page-title')</h1>
+                            <p class="page-header__description">@yield('page-description')</p>
+                        </div>
                     </div>
                 @endif
                 @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert"><i class="bi bi-check-circle me-2" aria-hidden="true"></i>{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button></div>
                 @endif
                 @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert"><i class="bi bi-exclamation-circle me-2" aria-hidden="true"></i>{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button></div>
                 @endif
-                @if($errors->any())
+                @if($errors->any() && ! View::hasSection('hide-error-summary'))
                     <div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
                 @endif
                 @yield('content')
             </main>
+
+            <footer class="app-footer">
+                &copy; {{ date('Y') }} {{ $school->fullName() }}
+            </footer>
         </div>
     </div>
-
-    <footer class="py-3 mt-4">
-        <div class="container-fluid text-center" style="color:var(--sb-text-secondary);">
-            <small>&copy; {{ date('Y') }} SMK Bhakti Insani Bogor</small>
-        </div>
-    </footer>
     @stack('scripts')
 </body>
 </html>

@@ -424,7 +424,7 @@ class StudentAreaTest extends TestCase
 
         $quizzes = $this->actingAs($student)->get(route('student.quizzes.index'));
         $quizzes->assertOk();
-        $quizzes->assertSee('Belum ada kuis atau ujian yang tersedia.');
+        $quizzes->assertSee('Belum ada kuis yang tersedia.');
 
         $grades = $this->actingAs($student)->get(route('student.grades.index'));
         $grades->assertOk();
@@ -432,6 +432,6 @@ class StudentAreaTest extends TestCase
 
         $discussions = $this->actingAs($student)->get(route('student.discussions.index'));
         $discussions->assertOk();
-        $discussions->assertSee('Belum ada diskusi yang tersedia.');
+        $discussions->assertSee('Belum ada diskusi.');
     }
 }

@@ -14,13 +14,19 @@
                 </span>
             </div>
             <p class="directory-hero__description">
-                Kelola informasi guru dan data kepegawaian SMK Bhakti Insani Bogor.
+                Kelola informasi guru dan data kepegawaian {{ $school->fullName() }}.
             </p>
         </div>
-        <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary directory-hero__action">
-            <i class="bi bi-plus-lg" aria-hidden="true"></i>
-            Tambah Guru
-        </a>
+        <div class="directory-hero__actions">
+            <a href="{{ route('admin.teachers.import') }}" class="btn btn-outline-primary directory-hero__action">
+                <i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i>
+                Impor Guru
+            </a>
+            <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary directory-hero__action">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                Tambah Guru
+            </a>
+        </div>
     </section>
 
     <section class="directory-stats" aria-label="Ringkasan data guru">

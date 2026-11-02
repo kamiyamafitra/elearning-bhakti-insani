@@ -13,7 +13,7 @@
     <div class="col-lg-4">
         <div class="card card-dashboard h-100 d-flex flex-column">
             <div class="card-body text-center d-flex flex-column justify-content-center flex-grow-1">
-                <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3 align-self-center" style="width: 72px; height: 72px;">
+                <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3 align-self-center" style="width: 60px; height: 60px;">
                     <i class="bi bi-grid-3x3-gap-fill fs-2" aria-hidden="true"></i>
                 </span>
                 <h5 class="mb-1 text-break">{{ $class->name }}</h5>
@@ -27,6 +27,14 @@
                 <a href="{{ route('admin.classes.assign-students', $class) }}" class="btn btn-outline-primary w-100">
                     <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Tetapkan Siswa
                 </a>
+                @if ($class->students->isNotEmpty())
+                    <form method="POST" action="{{ route('admin.classes.reset-passwords', $class) }}" onsubmit="return confirm('Reset password semua siswa {{ addslashes($class->name) }} menjadi NIS masing-masing? Siswa wajib membuat password baru saat masuk.');">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-key me-1" aria-hidden="true"></i> Reset Password Semua Siswa
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
     </div>

@@ -25,7 +25,7 @@
     <div class="col-md-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body d-flex align-items-center gap-3">
-                <div class="stat-icon" style="background: rgba(36, 87, 197, 0.12); color: #2457C5;">
+                <div class="stat-icon">
                     <i class="bi bi-journal-code fs-4"></i>
                 </div>
                 <div>
@@ -39,7 +39,7 @@
     <div class="col-md-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body d-flex align-items-center gap-3">
-                <div class="stat-icon" style="background: rgba(249, 115, 22, 0.12); color: #F97316;">
+                <div class="stat-icon">
                     <i class="bi bi-file-earmark-text fs-4"></i>
                 </div>
                 <div>
@@ -52,7 +52,7 @@
     <div class="col-md-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body d-flex align-items-center gap-3">
-                <div class="stat-icon" style="background: rgba(168, 85, 247, 0.12); color: #A855F7;">
+                <div class="stat-icon">
                     <i class="bi bi-clock-history fs-4"></i>
                 </div>
                 <div>
@@ -65,7 +65,7 @@
     <div class="col-md-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body d-flex align-items-center gap-3">
-                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #10B981;">
+                <div class="stat-icon">
                     <i class="bi bi-award fs-4"></i>
                 </div>
                 <div>

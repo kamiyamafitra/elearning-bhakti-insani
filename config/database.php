@@ -21,6 +21,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database Dump Binary
+    |--------------------------------------------------------------------------
+    |
+    | The mysqldump program used by the backup feature. Set this to a full
+    | path when mysqldump is not on the PATH of the web server.
+    |
+    */
+
+    'dump_binary' => env('DB_DUMP_BINARY', 'mysqldump'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Database Connections
     |--------------------------------------------------------------------------
     |

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LearningMaterial extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'subject_id',
@@ -91,5 +92,10 @@ class LearningMaterial extends Model
         }
 
         return number_format($bytes / 1024, 0, ',', '.').' KB';
+    }
+
+    public function activityLabel(): string
+    {
+        return 'materi';
     }
 }

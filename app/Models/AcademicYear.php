@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AcademicYear extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'name',
@@ -39,5 +40,10 @@ class AcademicYear extends Model
     public function classMemberships(): HasMany
     {
         return $this->hasMany(ClassMembership::class);
+    }
+
+    public function activityLabel(): string
+    {
+        return 'tahun ajaran';
     }
 }

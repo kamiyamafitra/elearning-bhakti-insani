@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AssignmentSubmission extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     public const STATUS_NOT_SUBMITTED = 'not_submitted';
 
@@ -126,5 +127,15 @@ class AssignmentSubmission extends Model
             self::STATUS_GRADED => 'text-bg-success',
             default => 'text-bg-secondary',
         };
+    }
+
+    public function activityLabel(): string
+    {
+        return 'pengumpulan tugas';
+    }
+
+    public function activityName(): ?string
+    {
+        return trim($this->assignment?->title.' oleh '.$this->student?->name);
     }
 }

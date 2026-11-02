@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\StudentProfile;
 use App\Models\TeacherProfile;
 use App\Models\User;
@@ -26,6 +27,11 @@ class LoginController extends Controller
      * The number of seconds the login throttle stays active.
      */
     private const THROTTLE_DECAY_SECONDS = 60;
+
+    /**
+     * The number of failed logins recorded per IP address each minute.
+     */
+    private const MAX_LOGGED_FAILURES_PER_MINUTE = 20;
 
     /**
      * The roles that can sign in through the login form.
@@ -59,7 +65,7 @@ class LoginController extends Controller
         $throttleKey = $this->throttleKey($identifier, $request);
 
         if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_LOGIN_ATTEMPTS)) {
-            return $this->failedLogin(
+            return $this->loginError(
                 'Terlalu banyak percobaan masuk. Silakan coba lagi dalam '
                     .RateLimiter::availableIn($throttleKey).' detik.',
             );
@@ -74,7 +80,7 @@ class LoginController extends Controller
         if ($matchingUsers->isEmpty()) {
             RateLimiter::hit($throttleKey, self::THROTTLE_DECAY_SECONDS);
 
-            return $this->failedLogin('Username dan kata sandi tidak sesuai.');
+            return $this->failedLogin('Username dan kata sandi tidak sesuai.', $candidates->isNotEmpty());
         }
 
         if ($matchingUsers->count() > 1) {
@@ -162,9 +168,32 @@ class LoginController extends Controller
     }
 
     /**
+     * Log a failed attempt, capped per IP address so a script cannot flood the log.
+     *
+     * Unknown usernames are masked because people sometimes type their password into the username field.
+     */
+    private function failedLogin(string $message, bool $isKnownAccount = true): RedirectResponse
+    {
+        $identifier = Str::limit(trim((string) request()->input('username')), 100);
+        $loggedIdentifier = $isKnownAccount ? $identifier : Str::mask($identifier, '*', 2);
+
+        RateLimiter::attempt(
+            'login-failure-log|'.request()->ip(),
+            self::MAX_LOGGED_FAILURES_PER_MINUTE,
+            fn () => ActivityLog::record(
+                ActivityLog::ACTION_LOGIN_FAILED,
+                "gagal masuk dengan username \"{$loggedIdentifier}\"",
+                properties: ['identifier' => $loggedIdentifier, 'reason' => $message],
+            ),
+        );
+
+        return $this->loginError($message);
+    }
+
+    /**
      * Keep the entered username available after a failed attempt.
      */
-    private function failedLogin(string $message): RedirectResponse
+    private function loginError(string $message): RedirectResponse
     {
         return back()
             ->withErrors(['username' => $message])

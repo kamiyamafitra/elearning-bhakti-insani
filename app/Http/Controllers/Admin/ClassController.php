@@ -4,7 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
+use App\Models\ActivityLog;
+use App\Models\Assignment;
 use App\Models\Classes;
+use App\Models\Discussion;
+use App\Models\LearningMaterial;
+use App\Models\Quiz;
 use App\Models\StudentProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -111,7 +116,12 @@ class ClassController extends Controller
 
     public function destroy(Classes $class): RedirectResponse
     {
-        if ($class->students()->exists() || $class->teachingAssignments()->exists() || $class->classMemberships()->exists()) {
+        $hasCourseData = Assignment::where('class_id', $class->id)->exists()
+            || LearningMaterial::where('class_id', $class->id)->exists()
+            || Quiz::where('class_id', $class->id)->exists()
+            || Discussion::where('class_id', $class->id)->exists();
+
+        if ($hasCourseData || $class->students()->exists() || $class->teachingAssignments()->exists() || $class->classMemberships()->exists()) {
             return back()->with('error', 'Kelas tidak dapat dihapus karena masih memiliki data terkait.');
         }
 
@@ -143,11 +153,13 @@ class ClassController extends Controller
             'student_profile_ids.*' => ['exists:student_profiles,id'],
         ]);
 
-        DB::transaction(function () use ($validated, $class) {
-            StudentProfile::query()
-                ->whereIn('id', $validated['student_profile_ids'])
-                ->update(['class_id' => $class->id]);
-        });
+        ActivityLog::withoutLogging(fn () => DB::transaction(function () use ($validated, $class): void {
+            StudentProfile::whereIn('id', $validated['student_profile_ids'])
+                ->get()
+                ->each(fn (StudentProfile $student) => $student->update(['class_id' => $class->id]));
+        }));
+
+        ActivityLog::record(ActivityLog::ACTION_BULK, 'menetapkan '.count($validated['student_profile_ids'])." siswa ke kelas {$class->name}", $class);
 
         return redirect()->route('admin.classes.show', $class)->with('success', 'Siswa berhasil ditetapkan ke kelas.');
     }

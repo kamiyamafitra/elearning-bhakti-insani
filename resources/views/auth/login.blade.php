@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Masuk ke E-Learning SMK Bhakti Insani Bogor sebagai siswa, guru, atau administrator.">
-    <title>Masuk - E-Learning SMK Bhakti Insani Bogor</title>
+    <meta name="description" content="Masuk ke E-Learning {{ $school->fullName() }} sebagai siswa, guru, atau administrator.">
+    <title>Masuk - E-Learning {{ $school->fullName() }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -17,11 +17,11 @@
             <aside class="auth-aside">
                 <div class="auth-brand">
                     <span class="auth-brand__icon">
-                        <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+                        @if ($school->logoUrl())<img src="{{ $school->logoUrl() }}" alt="">@else<i class="bi bi-mortarboard-fill" aria-hidden="true"></i>@endif
                     </span>
                     <span class="auth-brand__text">
-                        <strong>SMK Bhakti Insani</strong>
-                        <small>Bogor</small>
+                        <strong>{{ $school->name }}</strong>
+                        <small>{{ $school->city }}</small>
                     </span>
                 </div>
 
@@ -175,7 +175,10 @@
         </div>
 
         <p class="auth-copyright">
-            &copy; {{ date('Y') }} SMK Bhakti Insani Bogor. Seluruh hak cipta dilindungi.
+            &copy; {{ date('Y') }} {{ $school->fullName() }}. Seluruh hak cipta dilindungi.
+            @if ($school->address || $school->phone || $school->email)
+                <br>{{ collect([$school->address, $school->phone, $school->email])->filter()->implode(' · ') }}
+            @endif
         </p>
     </main>
 </body>

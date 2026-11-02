@@ -20,7 +20,7 @@
         <div class="card card-dashboard h-100">
             <div class="card-body d-flex flex-column">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <span class="stat-icon" style="background: rgba(36, 87, 197, 0.12); color: #2457C5;">
+                    <span class="stat-icon">
                         <i class="bi bi-journal-bookmark fs-4" aria-hidden="true"></i>
                     </span>
                     <div>
@@ -43,7 +43,7 @@
                 </div>
                 <div class="mt-auto">
                     <a href="{{ route('student.quizzes.index') }}" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-patch-question me-1" aria-hidden="true"></i> Lihat Kuis &amp; Ujian
+                        <i class="bi bi-patch-question me-1" aria-hidden="true"></i> Lihat Kuis
                     </a>
                 </div>
             </div>

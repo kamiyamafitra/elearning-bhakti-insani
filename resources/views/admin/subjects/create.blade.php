@@ -3,7 +3,7 @@
 @section('title', 'Tambah Mata Pelajaran')
 
 @section('content')
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-3 mb-3 border-bottom">
+<div class="page-header">
     <h1 class="h3">Tambah Mata Pelajaran</h1>
     <a href="{{ route('admin.subjects.index') }}" class="btn btn-outline-secondary">Kembali</a>
 </div>
@@ -13,7 +13,7 @@
         <form method="POST" action="{{ route('admin.subjects.store') }}">
             @csrf
 
-            <h2 class="h6 text-uppercase fw-bold mb-3" style="color: #64748B;">Informasi Mata Pelajaran</h2>
+            <h2 class="h6 text-uppercase fw-bold mb-3 text-muted">Informasi Mata Pelajaran</h2>
 
             <div class="mb-3">
                 <label class="form-label">Kode Mata Pelajaran</label>

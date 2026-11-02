@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Assignment extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     public const STATUS_DRAFT = 'draft';
 
@@ -126,5 +127,10 @@ class Assignment extends Model
         }
 
         return number_format($bytes / 1024, 0, ',', '.').' KB';
+    }
+
+    public function activityLabel(): string
+    {
+        return 'tugas';
     }
 }

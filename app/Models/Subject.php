@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subject extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'code',
@@ -54,5 +55,10 @@ class Subject extends Model
     public function scopeForTeacher(Builder $query, int $teacherId): Builder
     {
         return $query->whereHas('teachingAssignments', fn (Builder $query) => $query->where('teacher_id', $teacherId));
+    }
+
+    public function activityLabel(): string
+    {
+        return 'mata pelajaran';
     }
 }

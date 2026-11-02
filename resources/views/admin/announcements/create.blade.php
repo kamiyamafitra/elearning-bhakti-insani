@@ -3,7 +3,7 @@
 @section('title', 'Tambah Pengumuman')
 
 @section('content')
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center gap-3 pt-2 pb-3 mb-3 border-bottom">
+<div class="page-header">
     <div>
         <h1 class="h3 mb-1">Tambah Pengumuman</h1>
         <p class="mb-0" style="color: var(--sb-text-secondary);">Bagikan informasi untuk seluruh sekolah, peran tertentu, atau kelas tertentu.</p>

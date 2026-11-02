@@ -17,10 +17,16 @@
                 Kelola informasi siswa, data identitas, dan penempatan kelas dalam satu tempat.
             </p>
         </div>
-        <a href="{{ route('admin.students.create') }}" class="btn btn-primary directory-hero__action">
-            <i class="bi bi-plus-lg" aria-hidden="true"></i>
-            Tambah Siswa
-        </a>
+        <div class="directory-hero__actions">
+            <a href="{{ route('admin.students.import') }}" class="btn btn-outline-primary directory-hero__action">
+                <i class="bi bi-file-earmark-arrow-up" aria-hidden="true"></i>
+                Impor Siswa
+            </a>
+            <a href="{{ route('admin.students.create') }}" class="btn btn-primary directory-hero__action">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                Tambah Siswa
+            </a>
+        </div>
     </section>
 
     <section class="directory-stats" aria-label="Ringkasan data siswa">

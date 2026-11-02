@@ -3,7 +3,7 @@
 @section('title', 'Detail Guru')
 
 @section('content')
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center gap-3 pt-2 pb-3 mb-3 border-bottom">
+<div class="page-header">
     <div>
         <h1 class="h3 mb-1">Detail Data Guru</h1>
         <p class="mb-0" style="color: var(--sb-text-secondary);">Informasi akun dan profil guru.</p>
@@ -17,7 +17,7 @@
     <div class="col-lg-4">
         <div class="card card-dashboard h-100">
             <div class="card-body text-center">
-                <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px;">
+                <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
                     <span class="fs-3">{{ $teacher->user->initials }}</span>
                 </span>
                 <h5 class="mb-1">{{ $teacher->user->name }}</h5>
@@ -33,6 +33,20 @@
                 <a href="{{ route('admin.teachers.edit', $teacher) }}" class="btn btn-primary w-100">
                     <i class="bi bi-pencil-square me-1" aria-hidden="true"></i> Ubah Data Guru
                 </a>
+                <form method="POST" action="{{ route('admin.teachers.reset-password', $teacher) }}" class="mt-2" onsubmit="return confirm('Reset password {{ addslashes($teacher->user->name) }} menjadi NIP? Guru wajib membuat password baru saat masuk.');">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger w-100" @disabled(blank($teacher->nip)) title="{{ blank($teacher->nip) ? 'Guru belum memiliki NIP' : 'Reset password menjadi NIP' }}">
+                        <i class="bi bi-key me-1" aria-hidden="true"></i> Reset Password
+                    </button>
+                </form>
+                <form method="POST" action="{{ route('admin.teachers.toggle-active', $teacher) }}" class="mt-2">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="btn btn-light w-100">
+                        <i class="bi {{ $teacher->user->is_active ? 'bi-person-slash' : 'bi-person-check' }} me-1" aria-hidden="true"></i>
+                        {{ $teacher->user->is_active ? 'Nonaktifkan Akun' : 'Aktifkan Kembali' }}
+                    </button>
+                </form>
             </div>
         </div>
     </div>

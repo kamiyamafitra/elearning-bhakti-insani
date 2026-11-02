@@ -7,9 +7,9 @@
 @section('content')
 <div class="row g-3">
     <div class="col-lg-4">
-        <div class="card card-dashboard h-100">
+        <div class="card card-dashboard">
             <div class="card-body text-center">
-                <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
                     <span class="fs-3 fw-semibold">{{ $user->initials }}</span>
                 </span>
                 <h5 class="mb-1 text-break">{{ $user->name }}</h5>
@@ -43,7 +43,7 @@
     </div>
 
     <div class="col-lg-8">
-        <div class="card card-dashboard h-100">
+        <div class="card card-dashboard mb-3">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Ubah Profil</h5>
             </div>
@@ -117,6 +117,8 @@
                 </form>
             </div>
         </div>
+
+        @include('auth.partials.password-form')
     </div>
 </div>
 @endsection

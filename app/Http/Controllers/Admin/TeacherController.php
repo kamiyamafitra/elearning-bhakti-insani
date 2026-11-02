@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Assignment;
+use App\Models\LearningMaterial;
+use App\Models\Quiz;
 use App\Models\TeacherProfile;
+use App\Models\TeachingAssignment;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -113,7 +117,7 @@ class TeacherController extends Controller
             if (! empty($validated['password'])) {
                 $userData['password'] = Hash::make($validated['password']);
             }
-            $teacher->user()->update($userData);
+            $teacher->user->update($userData);
 
             $teacher->update([
                 'nip' => $validated['nip'] ?? null,
@@ -127,6 +131,15 @@ class TeacherController extends Controller
 
     public function destroy(TeacherProfile $teacher): RedirectResponse
     {
+        $hasTeachingData = TeachingAssignment::where('teacher_id', $teacher->user_id)->exists()
+            || LearningMaterial::where('teacher_id', $teacher->user_id)->exists()
+            || Assignment::where('teacher_id', $teacher->user_id)->exists()
+            || Quiz::where('teacher_id', $teacher->user_id)->exists();
+
+        if ($hasTeachingData) {
+            return back()->with('error', 'Guru tidak dapat dihapus karena masih memiliki kelas, materi, tugas, atau kuis. Nonaktifkan akunnya saja.');
+        }
+
         DB::transaction(function () use ($teacher) {
             $user = $teacher->user;
             $teacher->delete();

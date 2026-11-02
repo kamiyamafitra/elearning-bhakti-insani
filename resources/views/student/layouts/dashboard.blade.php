@@ -14,7 +14,7 @@
     </li>
     <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('student.quizzes.*') ? 'active' : '' }}" href="{{ route('student.quizzes.index') }}">
-            <i class="bi bi-patch-question"></i> Kuis &amp; Ujian
+            <i class="bi bi-patch-question"></i> Kuis
         </a>
     </li>
     <li class="nav-item">
@@ -33,8 +33,8 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('student.profile.*') ? 'active' : '' }}" href="{{ route('student.profile.edit') }}">
-            <i class="bi bi-person"></i> Profil Saya
+        <a class="nav-link {{ request()->routeIs('student.pdf-converter.*') ? 'active' : '' }}" href="{{ route('student.pdf-converter.index') }}">
+            <i class="bi bi-file-earmark-pdf"></i> Konversi PDF
         </a>
     </li>
 </ul>

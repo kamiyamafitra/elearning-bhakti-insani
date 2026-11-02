@@ -418,7 +418,7 @@ class TeacherAreaTest extends TestCase
 
         $quizzes = $this->actingAs($teacher)->get(route('teacher.quizzes.index'));
         $quizzes->assertOk();
-        $quizzes->assertSee('Belum ada kuis atau ujian yang dibuat.');
+        $quizzes->assertSee('Belum ada kuis yang dibuat.');
 
         $grades = $this->actingAs($teacher)->get(route('teacher.grades.index'));
         $grades->assertOk();
@@ -427,7 +427,7 @@ class TeacherAreaTest extends TestCase
 
         $discussions = $this->actingAs($teacher)->get(route('teacher.discussions.index'));
         $discussions->assertOk();
-        $discussions->assertSee('Belum ada diskusi kelas.');
+        $discussions->assertSee('Belum ada diskusi.');
     }
 
     public function test_teacher_cannot_access_student_area(): void

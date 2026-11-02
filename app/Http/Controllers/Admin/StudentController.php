@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Classes;
+use App\Models\ClassMembership;
 use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -147,7 +148,7 @@ class StudentController extends Controller
             if (! empty($validated['password'])) {
                 $userData['password'] = Hash::make($validated['password']);
             }
-            $student->user()->update($userData);
+            $student->user->update($userData);
 
             $student->update([
                 'nisn' => $validated['nisn'] ?? null,
@@ -169,6 +170,7 @@ class StudentController extends Controller
     {
         DB::transaction(function () use ($student) {
             $user = $student->user;
+            ClassMembership::where('student_id', $student->user_id)->delete();
             $student->delete();
             if ($user) {
                 $user->delete();
