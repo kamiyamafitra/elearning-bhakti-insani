@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\ChoosesPageSize;
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\LearningMaterial;
@@ -18,9 +19,12 @@ use Illuminate\View\View;
 
 class TeacherController extends Controller
 {
+    use ChoosesPageSize;
+
     public function index(Request $request): View
     {
         $search = trim((string) $request->input('q', ''));
+        $perPage = $this->perPage($request);
 
         $teachers = TeacherProfile::with('user:id,name,email,is_active')
             ->when($search !== '', function ($query) use ($search) {
@@ -32,16 +36,17 @@ class TeacherController extends Controller
                 });
             })
             ->orderByDesc('id')
-            ->paginate(10)
+            ->paginate($perPage)
             ->withQueryString();
 
         $totalTeachers = TeacherProfile::count();
         $activeTeachers = TeacherProfile::whereHas('user', fn ($query) => $query->where('is_active', true))->count();
         $teachersWithNip = TeacherProfile::whereNotNull('nip')->count();
 
-        return view('admin.teachers.index', compact(
+        return view('admin.teachers.index', ['perPageOptions' => self::PER_PAGE_OPTIONS, 'defaultPerPage' => self::DEFAULT_PER_PAGE] + compact(
             'teachers',
             'search',
+            'perPage',
             'totalTeachers',
             'activeTeachers',
             'teachersWithNip',

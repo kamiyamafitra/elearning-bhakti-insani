@@ -82,7 +82,7 @@
             </div>
             <div class="card-body pt-0">
                 @forelse ($latestAnnouncements as $announcement)
-                    <a href="{{ route('admin.announcements.show', $announcement) }}" class="d-block text-decoration-none py-2 {{ $loop->last ? '' : 'border-bottom' }}">
+                    <a href="{{ route('admin.announcements.show', $announcement) }}" class="link-row">
                         <div class="fw-semibold text-body text-break">{{ $announcement->title }}</div>
                         <div class="small text-muted">{{ $announcement->published_at?->format('d-m-Y H:i') ?? 'Belum dijadwalkan' }}</div>
                     </a>

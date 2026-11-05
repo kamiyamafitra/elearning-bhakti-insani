@@ -22,6 +22,9 @@
             @endif
         </div>
         <div style="white-space: pre-line;">{{ $announcement->content }}</div>
+        @if ($announcement->image_path)
+            @include('announcements._image', ['imageUrl' => route('student.announcements.image', $announcement)])
+        @endif
     </div>
 </div>
 @endsection

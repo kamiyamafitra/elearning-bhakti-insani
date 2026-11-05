@@ -22,7 +22,7 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="stat-icon">
@@ -36,7 +36,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="stat-icon">
@@ -49,7 +49,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="stat-icon">
@@ -62,7 +62,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="stat-icon">
@@ -140,7 +140,7 @@
                 @else
                     <div class="list-group list-group-flush">
                         @foreach ($announcements as $announcement)
-                            <a href="{{ route('student.announcements.show', $announcement) }}" class="list-group-item list-group-item-action px-0">
+                            <a href="{{ route('student.announcements.show', $announcement) }}" class="link-row">
                                 <div class="fw-semibold text-break">{{ $announcement->title }}</div>
                                 <div class="text-muted small">{{ \Illuminate\Support\Str::limit($announcement->content, 90) }}</div>
                                 <div class="text-muted small mt-1">{{ $announcement->published_at?->format('d-m-Y H:i') ?? $announcement->created_at?->format('d-m-Y H:i') }}</div>

@@ -50,11 +50,11 @@ class Subject extends Model
     }
 
     /**
-     * Limit subjects to the ones assigned to a teacher.
+     * Limit subjects to the ones assigned to a teacher in the active academic year.
      */
     public function scopeForTeacher(Builder $query, int $teacherId): Builder
     {
-        return $query->whereHas('teachingAssignments', fn (Builder $query) => $query->where('teacher_id', $teacherId));
+        return $query->whereHas('teachingAssignments', fn (Builder $query) => $query->where('teacher_id', $teacherId)->inActiveYear());
     }
 
     public function activityLabel(): string

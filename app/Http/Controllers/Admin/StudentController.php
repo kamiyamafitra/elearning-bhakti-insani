@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\ChoosesPageSize;
 use App\Http\Controllers\Controller;
 use App\Models\Classes;
 use App\Models\ClassMembership;
@@ -16,10 +17,13 @@ use Illuminate\View\View;
 
 class StudentController extends Controller
 {
+    use ChoosesPageSize;
+
     public function index(Request $request): View
     {
         $search = trim((string) $request->input('q', ''));
         $classId = $request->integer('class_id') ?: null;
+        $perPage = $this->perPage($request);
 
         $students = StudentProfile::with([
             'user:id,name,email',
@@ -36,7 +40,7 @@ class StudentController extends Controller
             })
             ->when($classId, fn ($query) => $query->where('class_id', $classId))
             ->orderByDesc('id')
-            ->paginate(10)
+            ->paginate($perPage)
             ->withQueryString();
 
         $classes = Classes::with('academicYear:id,name')
@@ -47,11 +51,12 @@ class StudentController extends Controller
         $studentsWithClass = StudentProfile::whereNotNull('class_id')->count();
         $classesWithStudents = Classes::whereHas('students')->count();
 
-        return view('admin.students.index', compact(
+        return view('admin.students.index', ['perPageOptions' => self::PER_PAGE_OPTIONS, 'defaultPerPage' => self::DEFAULT_PER_PAGE] + compact(
             'students',
             'search',
             'classes',
             'classId',
+            'perPage',
             'totalStudents',
             'studentsWithClass',
             'classesWithStudents',

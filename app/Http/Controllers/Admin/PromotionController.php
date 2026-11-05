@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\ActivityLog;
+use App\Models\Announcement;
 use App\Models\Classes;
 use App\Models\StudentProfile;
 use Illuminate\Http\RedirectResponse;
@@ -43,146 +44,242 @@ class PromotionController extends Controller
     {
         $academicYears = AcademicYear::orderByDesc('start_date')->get(['id', 'name', 'is_active']);
 
-        $sourceClasses = Classes::query()
-            ->join('academic_years', 'academic_years.id', '=', 'classes.academic_year_id')
-            ->select('classes.*')
-            ->with('academicYear:id,name')
-            ->withCount('students')
-            ->orderByDesc('academic_years.start_date')
-            ->orderBy('classes.name')
-            ->get();
+        $sourceYear = $academicYears->firstWhere('id', $request->integer('source_academic_year_id'))
+            ?? $academicYears->firstWhere('is_active', true)
+            ?? $academicYears->first();
 
-        $sourceClass = $request->filled('source_class_id')
-            ? Classes::with('academicYear')->find($request->integer('source_class_id'))
-            : null;
-
-        $targetYear = $request->filled('target_academic_year_id')
-            ? $academicYears->firstWhere('id', $request->integer('target_academic_year_id'))
-            : $academicYears->first(fn (AcademicYear $year) => $year->is_active && $year->id !== (int) $sourceClass?->academic_year_id);
-
-        $viewData = compact('academicYears', 'sourceClasses', 'sourceClass', 'targetYear');
-
-        if ($sourceClass === null || $targetYear === null || $targetYear->id === (int) $sourceClass->academic_year_id) {
-            return view('admin.promotions.index', $viewData + [
-                'isSameYear' => $sourceClass !== null && $targetYear?->id === (int) $sourceClass->academic_year_id,
-            ]);
+        if ($sourceYear === null) {
+            return view('admin.promotions.index', compact('academicYears', 'sourceYear'));
         }
 
-        $students = $sourceClass->students()
-            ->join('users', 'users.id', '=', 'student_profiles.user_id')
-            ->select('student_profiles.*')
-            ->with('user:id,name,email')
-            ->orderBy('users.name')
-            ->get();
+        $targetYearName = $this->nextYearName($sourceYear);
+        $targetYear = AcademicYear::where('name', $targetYearName)->first();
+        $targetClassNames = $targetYear
+            ? $targetYear->classes()->pluck('name')->map(fn (string $name) => Str::lower($name))
+            : collect();
 
-        $targetClasses = Classes::where('academic_year_id', $targetYear->id)->orderBy('name')->get(['id', 'name', 'level']);
-        $isFinalLevel = in_array(Str::lower((string) $sourceClass->level), self::FINAL_LEVELS, true);
+        $plans = $this->classesWithStudents($sourceYear)->map(function (Classes $class) use ($targetClassNames): array {
+            $targetName = $this->nextLevelName($class);
 
-        return view('admin.promotions.index', $viewData + [
-            'isSameYear' => false,
-            'students' => $students,
-            'targetClasses' => $targetClasses,
-            'isFinalLevel' => $isFinalLevel,
-            'defaultAction' => $isFinalLevel ? self::ACTION_GRADUATE : self::ACTION_PROMOTE,
-            'suggestedPromoteClassId' => $this->findClassByName($targetClasses, $this->nextLevelName($sourceClass)),
-            'suggestedRepeatClassId' => $this->findClassByName($targetClasses, $sourceClass->name),
-        ]);
+            return [
+                'class' => $class,
+                'students' => $class->students->sortBy('user.name')->values(),
+                'isFinal' => $this->isFinalLevel($class),
+                'defaultAction' => $this->defaultAction($class),
+                'targetName' => $targetName,
+                'targetIsNew' => $targetName !== null && ! $targetClassNames->contains(Str::lower($targetName)),
+            ];
+        });
+
+        return view('admin.promotions.index', compact('academicYears', 'sourceYear', 'targetYearName', 'targetYear', 'plans'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'source_class_id' => ['required', 'integer', 'exists:classes,id'],
-            'target_academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
-            'actions' => ['required', 'array'],
+            'source_academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
+            'targets' => ['nullable', 'array'],
+            'targets.*' => ['nullable', 'string', 'max:50'],
+            'actions' => ['nullable', 'array'],
             'actions.*' => [Rule::in([self::ACTION_PROMOTE, self::ACTION_REPEAT, self::ACTION_GRADUATE])],
-            'promote_class_id' => ['nullable', 'integer'],
-            'repeat_class_id' => ['nullable', 'integer'],
-        ], [
-            'actions.required' => 'Tidak ada siswa yang diproses.',
         ]);
 
-        $sourceClass = Classes::findOrFail($validated['source_class_id']);
-        $targetYearId = (int) $validated['target_academic_year_id'];
-        $actions = collect($validated['actions']);
+        $sourceYear = AcademicYear::findOrFail($validated['source_academic_year_id']);
+        $classes = $this->classesWithStudents($sourceYear);
 
-        if ($targetYearId === (int) $sourceClass->academic_year_id) {
+        if ($classes->isEmpty()) {
             throw ValidationException::withMessages([
-                'target_academic_year_id' => 'Tahun ajaran tujuan harus berbeda dari tahun ajaran kelas asal.',
+                'source_academic_year_id' => "Tidak ada siswa untuk diproses di tahun ajaran {$sourceYear->name}.",
             ]);
         }
 
-        $promoteClass = $this->resolveTargetClass($actions, self::ACTION_PROMOTE, $validated['promote_class_id'] ?? null, $targetYearId, 'promote_class_id', 'naik kelas');
-        $repeatClass = $this->resolveTargetClass($actions, self::ACTION_REPEAT, $validated['repeat_class_id'] ?? null, $targetYearId, 'repeat_class_id', 'tinggal kelas');
+        $actions = collect($validated['actions'] ?? []);
+        $targetNames = $this->resolveTargetNames($classes, $actions, $validated['targets'] ?? []);
+        $counts = collect();
 
-        $students = StudentProfile::query()
-            ->where('class_id', $sourceClass->id)
-            ->whereIn('id', $actions->keys())
-            ->with('user')
-            ->get();
-
-        if ($students->count() !== $actions->count()) {
-            throw ValidationException::withMessages([
-                'actions' => 'Sebagian siswa sudah tidak berada di kelas asal. Muat ulang halaman lalu coba lagi.',
+        $targetYear = ActivityLog::withoutLogging(fn () => DB::transaction(function () use ($sourceYear, $classes, $actions, $targetNames, $counts): AcademicYear {
+            $targetYear = AcademicYear::firstOrCreate(['name' => $this->nextYearName($sourceYear)], [
+                'start_date' => $sourceYear->start_date->copy()->addYear(),
+                'end_date' => $sourceYear->end_date->copy()->addYear(),
+                'is_active' => false,
             ]);
-        }
 
-        ActivityLog::withoutLogging(fn () => DB::transaction(function () use ($students, $actions, $promoteClass, $repeatClass): void {
-            foreach ($students as $student) {
-                $targetClass = match ($actions[$student->id]) {
-                    self::ACTION_PROMOTE => $promoteClass,
-                    self::ACTION_REPEAT => $repeatClass,
-                    default => null,
-                };
+            foreach ($sourceYear->classes()->with(['teachingAssignments', 'schedules'])->get() as $class) {
+                $this->copySetup($class, $this->findOrCreateClass($targetYear, $class->name, $class->level, $class->code));
+            }
 
-                $student->update(['class_id' => $targetClass?->id]);
+            foreach ($classes as $class) {
+                foreach ($class->students as $student) {
+                    $action = $actions[$student->id] ?? $this->defaultAction($class);
+                    $counts[$action] = ($counts[$action] ?? 0) + 1;
 
-                if ($targetClass === null) {
-                    $student->user->update(['is_active' => false]);
+                    $targetClass = match ($action) {
+                        self::ACTION_PROMOTE => $this->findOrCreateClass($targetYear, $targetNames[$class->id], $this->nextLevel($class) ?? $class->level),
+                        self::ACTION_REPEAT => $this->findOrCreateClass($targetYear, $class->name, $class->level, $class->code),
+                        default => null,
+                    };
+
+                    $student->update(['class_id' => $targetClass?->id]);
+
+                    if ($targetClass === null) {
+                        $student->user->update(['is_active' => false]);
+                    }
                 }
             }
+
+            if ($sourceYear->is_active) {
+                AcademicYear::where('is_active', true)->update(['is_active' => false]);
+                $targetYear->update(['is_active' => true]);
+
+                // Start the new year with a clean board; announcements scheduled for later stay queued.
+                Announcement::where('is_published', true)
+                    ->where(fn ($query) => $query->whereNull('published_at')->orWhere('published_at', '<=', now()))
+                    ->update(['is_published' => false]);
+            }
+
+            return $targetYear;
         }));
 
-        ActivityLog::record(ActivityLog::ACTION_BULK, "memproses kenaikan kelas {$sourceClass->name} untuk {$students->count()} siswa", $sourceClass, ['target_academic_year_id' => $targetYearId, 'counts' => $actions->countBy()->all()]);
-
-        $counts = $actions->countBy();
-        $summary = collect([
-            self::ACTION_PROMOTE => $promoteClass ? "naik ke {$promoteClass->name}" : null,
-            self::ACTION_REPEAT => $repeatClass ? "tinggal kelas di {$repeatClass->name}" : null,
-            self::ACTION_GRADUATE => 'lulus (akun dinonaktifkan)',
-        ])
-            ->filter(fn (?string $label, string $action) => $label !== null && $counts->get($action, 0) > 0)
-            ->map(fn (string $label, string $action) => $counts[$action].' siswa '.$label)
-            ->implode(', ');
+        ActivityLog::record(ActivityLog::ACTION_BULK, "memproses kenaikan kelas {$sourceYear->name} ke {$targetYear->name}", $targetYear, ['counts' => $counts->all()]);
 
         return redirect()
-            ->route('admin.promotions.index', [
-                'source_class_id' => $sourceClass->id,
-                'target_academic_year_id' => $targetYearId,
-            ])
-            ->with('success', "Kenaikan kelas {$sourceClass->name} berhasil diproses: {$summary}.");
+            ->route('admin.promotions.index', ['source_academic_year_id' => $sourceYear->id])
+            ->with('success', $this->summary($targetYear, $counts));
     }
 
     /**
-     * Load the class chosen for an action, requiring it only when at least one student uses that action.
-     *
-     * @param  Collection<int|string, string>  $actions
+     * @return Collection<int, Classes>
      */
-    private function resolveTargetClass(Collection $actions, string $action, ?int $classId, int $targetYearId, string $field, string $label): ?Classes
+    private function classesWithStudents(AcademicYear $academicYear): Collection
     {
-        if (! $actions->contains($action)) {
-            return null;
+        return $academicYear->classes()
+            ->whereHas('students')
+            ->with('students.user')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Pick each class's promotion target, requiring one only when a student actually moves up.
+     *
+     * @param  Collection<int, Classes>  $classes
+     * @param  Collection<int|string, string>  $actions
+     * @param  array<int|string, string|null>  $targets
+     * @return array<int, string>
+     */
+    private function resolveTargetNames(Collection $classes, Collection $actions, array $targets): array
+    {
+        $names = [];
+
+        foreach ($classes as $class) {
+            $isPromoting = $class->students->contains(
+                fn (StudentProfile $student) => ($actions[$student->id] ?? $this->defaultAction($class)) === self::ACTION_PROMOTE
+            );
+
+            if (! $isPromoting) {
+                continue;
+            }
+
+            $name = trim((string) ($targets[$class->id] ?? '')) ?: $this->nextLevelName($class);
+
+            if ($name === null) {
+                throw ValidationException::withMessages([
+                    "targets.{$class->id}" => "Isi kelas tujuan untuk siswa {$class->name} yang naik kelas.",
+                ]);
+            }
+
+            $names[$class->id] = $name;
         }
 
-        $class = $classId ? Classes::where('academic_year_id', $targetYearId)->find($classId) : null;
+        return $names;
+    }
 
-        if ($class === null) {
-            throw ValidationException::withMessages([
-                $field => "Pilih kelas tujuan di tahun ajaran baru untuk siswa yang {$label}.",
+    private function findOrCreateClass(AcademicYear $academicYear, string $name, ?string $level, ?string $sourceCode = null): Classes
+    {
+        return Classes::where('academic_year_id', $academicYear->id)->where('name', $name)->first()
+            ?? Classes::create([
+                'academic_year_id' => $academicYear->id,
+                'name' => $name,
+                'code' => Classes::uniqueCodeFor($sourceCode ?? Str::upper(Str::slug($name)), $academicYear),
+                'level' => $level,
             ]);
+    }
+
+    /**
+     * Carry teachers and schedules over to the same class next year, keeping anything already set up there.
+     */
+    private function copySetup(Classes $source, Classes $target): void
+    {
+        if (! $target->teachingAssignments()->exists()) {
+            foreach ($source->teachingAssignments as $assignment) {
+                $target->teachingAssignments()->create([
+                    'academic_year_id' => $target->academic_year_id,
+                    'teacher_id' => $assignment->teacher_id,
+                    'subject_id' => $assignment->subject_id,
+                ]);
+            }
         }
 
-        return $class;
+        if (! $target->schedules()->exists()) {
+            foreach ($source->schedules as $schedule) {
+                $target->schedules()->create($schedule->only(['subject_id', 'day_of_week', 'start_time', 'end_time']));
+            }
+        }
+    }
+
+    /**
+     * @param  Collection<string, int>  $counts
+     */
+    private function summary(AcademicYear $targetYear, Collection $counts): string
+    {
+        $results = collect([
+            self::ACTION_PROMOTE => 'naik kelas',
+            self::ACTION_REPEAT => 'tinggal kelas',
+            self::ACTION_GRADUATE => 'lulus (akun dinonaktifkan)',
+        ])
+            ->filter(fn (string $label, string $action) => $counts->has($action))
+            ->map(fn (string $label, string $action) => "{$counts[$action]} siswa {$label}")
+            ->implode(', ');
+
+        $message = "Kenaikan kelas ke {$targetYear->name} selesai: {$results}.";
+
+        if ($targetYear->is_active) {
+            $message .= " Tahun ajaran {$targetYear->name} sekarang aktif.";
+        }
+
+        $classesWithoutTeachers = $targetYear->classes()
+            ->whereHas('students')
+            ->whereDoesntHave('teachingAssignments')
+            ->orderBy('name')
+            ->pluck('name');
+
+        if ($classesWithoutTeachers->isNotEmpty()) {
+            $message .= ' Kelas yang belum punya guru: '.$classesWithoutTeachers->implode(', ').'.';
+        }
+
+        return $message;
+    }
+
+    private function nextYearName(AcademicYear $academicYear): string
+    {
+        [$firstYear, $secondYear] = array_map('intval', explode('/', $academicYear->name));
+
+        return ($firstYear + 1).'/'.($secondYear + 1);
+    }
+
+    private function defaultAction(Classes $class): string
+    {
+        return $this->isFinalLevel($class) ? self::ACTION_GRADUATE : self::ACTION_PROMOTE;
+    }
+
+    private function isFinalLevel(Classes $class): bool
+    {
+        return in_array(Str::lower((string) $class->level), self::FINAL_LEVELS, true);
+    }
+
+    private function nextLevel(Classes $class): ?string
+    {
+        return self::NEXT_LEVELS[Str::lower((string) $class->level)] ?? null;
     }
 
     /**
@@ -190,24 +287,12 @@ class PromotionController extends Controller
      */
     private function nextLevelName(Classes $class): ?string
     {
-        $nextLevel = self::NEXT_LEVELS[Str::lower((string) $class->level)] ?? null;
+        $nextLevel = $this->nextLevel($class);
 
         if ($nextLevel === null || ! Str::startsWith(Str::lower($class->name), Str::lower($class->level).' ')) {
             return null;
         }
 
         return $nextLevel.Str::substr($class->name, Str::length($class->level));
-    }
-
-    /**
-     * @param  Collection<int, Classes>  $classes
-     */
-    private function findClassByName(Collection $classes, ?string $name): ?int
-    {
-        if ($name === null) {
-            return null;
-        }
-
-        return $classes->first(fn (Classes $class) => Str::lower($class->name) === Str::lower($name))?->id;
     }
 }

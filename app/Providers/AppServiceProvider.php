@@ -45,13 +45,14 @@ class AppServiceProvider extends ServiceProvider
             fn ($view) => $view->with('school', SchoolSetting::current()),
         );
 
-        View::composer('layouts.dashboard', function ($view) {
-            $user = Auth::user();
+        // The sidebar of each role shows a red badge with the number of new announcements.
+        View::composer(
+            ['admin.layouts.dashboard', 'teacher.layouts.dashboard', 'student.layouts.dashboard'],
+            function ($view) {
+                $user = Auth::user();
 
-            $view->with(
-                'layoutAnnouncementCount',
-                $user ? Announcement::query()->visibleTo($user)->count() : 0,
-            );
-        });
+                $view->with('newAnnouncementCount', $user ? Announcement::query()->unreadBy($user)->count() : 0);
+            },
+        );
     }
 }

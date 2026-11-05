@@ -455,4 +455,25 @@ class TeacherAreaTest extends TestCase
         $response->assertViewHas('totalClasses', 1);
         $response->assertViewHas('totalStudents', 0);
     }
+
+    public function test_schedules_only_show_lessons_the_teacher_teaches(): void
+    {
+        $teacher = $this->makeTeacher('Guru Demo');
+        $otherTeacher = $this->makeTeacher('Guru Lain', '999');
+        $class = $this->makeClass('X TKJ 1');
+        $ownSubject = $this->makeSubject('Produk Kreatif dan Kewirausahaan', 'PKK');
+        $otherSubject = $this->makeSubject('User Interface/User Experience', 'UIUX');
+
+        $this->assignTeacher($teacher, $class, $ownSubject);
+        $this->assignTeacher($otherTeacher, $class, $otherSubject);
+        $this->makeSchedule($ownSubject, $class, 1);
+        $this->makeSchedule($otherSubject, $class, 2);
+
+        $this->actingAs($teacher)->get(route('teacher.dashboard'))
+            ->assertViewHas('schedules', fn ($schedules) => $schedules->pluck('subject_id')->all() === [$ownSubject->id])
+            ->assertDontSee('User Interface/User Experience');
+
+        $this->actingAs($teacher)->get(route('teacher.subjects.index'))
+            ->assertViewHas('subjects', fn ($subjects) => $subjects->getCollection()->flatMap->schedules->pluck('subject_id')->unique()->all() === [$ownSubject->id]);
+    }
 }

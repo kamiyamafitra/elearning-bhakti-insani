@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use App\Models\AcademicYear;
 use App\Models\ClassSchedule;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -63,7 +64,8 @@ trait FiltersSubjectIndex
                 fn ($query) => $query
                     ->select('class_id')
                     ->from('teaching_assignments')
-                    ->where('teacher_id', $teacherId),
+                    ->where('teacher_id', $teacherId)
+                    ->whereIn('academic_year_id', AcademicYear::where('is_active', true)->select('id')),
             ))
             ->select('class_schedules.'.$column)
             ->orderBy('class_schedules.day_of_week')

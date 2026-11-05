@@ -2132,40 +2132,6 @@ small,
     margin-left: auto;
 }
 
-.app-icon-button {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: var(--ui-radius-sm);
-    color: var(--ui-text-secondary);
-    font-size: 1.1rem;
-    text-decoration: none;
-}
-
-.app-icon-button:hover {
-    background: var(--ui-surface-muted);
-    color: var(--ui-text);
-}
-
-.app-icon-button__badge {
-    position: absolute;
-    top: 3px;
-    right: 2px;
-    min-width: 17px;
-    height: 17px;
-    padding: 0 4px;
-    border-radius: 999px;
-    background: #DC2626;
-    color: #FFFFFF;
-    font-size: 0.65rem;
-    font-weight: 700;
-    line-height: 17px;
-    text-align: center;
-}
-
 .app-user-button {
     display: flex;
     align-items: center;
@@ -2785,4 +2751,247 @@ small,
     width: 100%;
     height: 100%;
     object-fit: contain;
+}
+
+/* Clickable list rows (announcements, recent submissions): a chevron marks them as tappable,
+   hover darkens them on desktop and pressing darkens them on touch screens. */
+.link-row {
+    position: relative;
+    display: block;
+    margin: 0 -0.75rem;
+    padding: 0.85rem 2.5rem 0.85rem 0.75rem;
+    border-radius: var(--ui-radius-sm);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.link-row:not(:last-child) {
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.link-row::after {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    color: var(--ui-muted);
+    font-family: 'bootstrap-icons';
+    content: '\F285';
+    transform: translateY(-50%);
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.link-row:hover,
+.link-row:focus-visible {
+    background: #E2EAF8;
+    color: inherit;
+}
+
+.link-row:hover::after,
+.link-row:focus-visible::after {
+    color: var(--ui-primary);
+    transform: translate(3px, -50%);
+}
+
+.link-row:active {
+    background: #D2DFF6;
+}
+
+.link-row:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: -2px;
+}
+
+/* Announcement image: a small preview that opens the full picture when tapped. */
+.announcement-thumb {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 1rem;
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--ui-muted);
+    font-size: 0.78rem;
+    text-align: left;
+    cursor: zoom-in;
+}
+
+.announcement-thumb img {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    background: var(--ui-surface-muted);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-sm);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.announcement-thumb:hover img,
+.announcement-thumb:focus-visible img {
+    box-shadow: 0 0 0 3px var(--ui-primary-soft), var(--ui-shadow);
+    transform: translateY(-1px);
+}
+
+.announcement-thumb:hover .announcement-thumb__hint {
+    color: var(--ui-primary);
+}
+
+.announcement-full-image {
+    display: block;
+    max-width: 100%;
+    max-height: 85vh;
+    margin: 0 auto;
+    border-radius: var(--ui-radius-sm);
+    object-fit: contain;
+}
+
+/* Tables keep absolutely positioned bits (screen reader labels, stretched links) inside their scroll area,
+   otherwise they push the whole page wider than a phone screen. */
+.table-responsive {
+    position: relative;
+}
+
+/* Tablets in landscape and small laptops: a slimmer sidebar leaves room for two-column sections. */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .app-sidebar {
+        --sidebar-width: 216px;
+    }
+
+    .app-content {
+        padding: 1.25rem;
+    }
+
+    .app-sidebar__nav .nav-link {
+        padding-right: 0.65rem;
+        padding-left: 0.65rem;
+    }
+}
+
+/* Touch screens (phones and tablets) -------------------------------------- */
+
+@media (pointer: coarse) {
+    /* 16px text stops iPhone and iPad Safari from zooming the page when a field is tapped. */
+    .form-control,
+    .form-select,
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Small buttons get a finger-sized tap area. */
+    .btn-sm,
+    .btn-group-sm > .btn {
+        min-height: 36px;
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+    }
+
+    .page-link {
+        min-width: 40px;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* Phones ------------------------------------------------------------------ */
+
+@media (max-width: 575.98px) {
+    .app-content {
+        padding-top: 1rem;
+        padding-bottom: 1.25rem;
+    }
+
+    .page-header__title,
+    .directory-hero__title,
+    .subjects-hero__title {
+        font-size: 1.3rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .row.g-3,
+    .row.g-4 {
+        --bs-gutter-x: 0.75rem;
+        --bs-gutter-y: 0.75rem;
+    }
+
+    /* Stat cards: two per row, with labels allowed to wrap instead of being cut off. */
+    .directory-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin-top: 1rem;
+    }
+
+    .directory-stat {
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.8rem;
+    }
+
+    .directory-stat__label {
+        font-size: 0.68rem;
+        letter-spacing: 0;
+    }
+
+    .directory-stat__value {
+        font-size: 1.15rem;
+        overflow-wrap: anywhere;
+    }
+
+    .stat-icon,
+    .directory-stat__icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .stat-icon i,
+    .directory-stat__icon i {
+        font-size: 1rem !important;
+    }
+
+    .card-body:has(> .stat-icon),
+    .card-body:has(> .stat-icon.flex-shrink-0) {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.5rem !important;
+    }
+
+    .card-body:has(> .stat-icon) .text-truncate {
+        white-space: normal;
+    }
+
+    .card-body:has(> .stat-icon) .h4 {
+        font-size: 1.2rem;
+    }
+
+    /* Tables scroll sideways instead of squeezing every word onto its own line. */
+    .table-responsive th,
+    .table-responsive td {
+        white-space: nowrap;
+    }
+
+    .table-responsive td.text-break {
+        min-width: 14rem;
+        white-space: normal;
+        word-break: normal !important;
+    }
+
+    /* Tabs stay on one line and scroll, rather than wrapping into a broken second row. */
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+    }
+
+    .nav-tabs .nav-link {
+        white-space: nowrap;
+    }
 }

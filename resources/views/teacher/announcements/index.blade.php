@@ -12,10 +12,15 @@
     </div>
     <div class="card-body">
         @forelse ($announcements as $announcement)
-            <a href="{{ route('teacher.announcements.show', $announcement) }}" class="d-block text-decoration-none text-reset border-bottom py-3">
+            <a href="{{ route('teacher.announcements.show', $announcement) }}" class="link-row">
                 <div class="d-flex justify-content-between align-items-start gap-3">
                     <div class="min-w-0">
-                        <div class="fw-semibold text-break">{{ $announcement->title }}</div>
+                        <div class="fw-semibold text-break">
+                            {{ $announcement->title }}
+                            @if ($announcement->image_path)
+                                <i class="bi bi-image text-primary ms-1" title="Ada gambar" aria-label="Ada gambar"></i>
+                            @endif
+                        </div>
                         <div class="text-muted small">{{ \Illuminate\Support\Str::limit($announcement->content, 160) }}</div>
                     </div>
                     <div class="text-end flex-shrink-0 text-muted small">

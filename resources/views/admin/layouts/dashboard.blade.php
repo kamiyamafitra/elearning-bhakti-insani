@@ -37,6 +37,9 @@
                 @if ($menuItem['route'])
                     <a class="nav-link {{ request()->routeIs($menuItem['active']) ? 'active' : '' }}" href="{{ route($menuItem['route']) }}" @if (request()->routeIs($menuItem['active'])) aria-current="page" @endif>
                         <i class="bi {{ $menuItem['icon'] }}" aria-hidden="true"></i> {{ $menuItem['label'] }}
+                        @if ($menuItem['route'] === 'admin.announcements.index')
+                            @include('layouts._new-announcement-badge')
+                        @endif
                     </a>
                 @else
                     <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">

@@ -25,19 +25,12 @@
             'student' => route('student.profile.edit'),
             default => null,
         };
-        $announcementsUrl = match ($currentUser?->role) {
-            'admin' => route('admin.announcements.index'),
-            'teacher' => route('teacher.announcements.index'),
-            'student' => route('student.announcements.index'),
-            default => null,
-        };
         $roleLabel = match ($currentUser?->role) {
             'admin' => 'Administrator',
             'teacher' => 'Guru',
             'student' => 'Siswa',
             default => '',
         };
-        $announcementCount = $layoutAnnouncementCount ?? 0;
     @endphp
 
     <div class="app-shell">
@@ -65,14 +58,6 @@
                 <a class="app-topbar__brand d-lg-none" href="{{ route($dashboardRoute) }}">{{ $school->name }}</a>
 
                 <div class="app-topbar__actions">
-                    @if ($announcementsUrl)
-                        <a href="{{ $announcementsUrl }}" class="app-icon-button" aria-label="Lihat pengumuman ({{ $announcementCount }})">
-                            <i class="bi bi-bell" aria-hidden="true"></i>
-                            @if ($announcementCount > 0)
-                                <span class="app-icon-button__badge">{{ $announcementCount }}</span>
-                            @endif
-                        </a>
-                    @endif
                     <div class="dropdown">
                         <button class="app-user-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="app-avatar" aria-hidden="true">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 1)) }}</span>
@@ -85,9 +70,6 @@
                         <ul class="dropdown-menu dropdown-menu-end">
                             @if ($profileUrl)
                                 <li><a class="dropdown-item" href="{{ $profileUrl }}"><i class="bi bi-person me-2" aria-hidden="true"></i>Profil Saya</a></li>
-                            @endif
-                            @if ($announcementsUrl)
-                                <li><a class="dropdown-item" href="{{ $announcementsUrl }}"><i class="bi bi-megaphone me-2" aria-hidden="true"></i>Pengumuman</a></li>
                             @endif
                             <li><hr class="dropdown-divider"></li>
                             <li>

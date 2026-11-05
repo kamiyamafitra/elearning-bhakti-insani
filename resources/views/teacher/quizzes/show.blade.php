@@ -42,7 +42,7 @@
 @endif
 
 <div class="row g-3 mb-4">
-    <div class="col-md-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body">
                 <div class="text-muted small">Status</div>
@@ -50,7 +50,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body">
                 <div class="text-muted small">Waktu</div>
@@ -58,7 +58,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body">
                 <div class="text-muted small">Durasi</div>
@@ -66,7 +66,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
+    <div class="col-6 col-xl-3">
         <div class="card card-dashboard h-100">
             <div class="card-body">
                 <div class="text-muted small">Rata-rata Nilai</div>

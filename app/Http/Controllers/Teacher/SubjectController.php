@@ -43,7 +43,8 @@ class SubjectController extends Controller
                 'teachingAssignments',
                 fn (Builder $query) => $query
                     ->where('teacher_id', $teacherId)
-                    ->where('class_id', $classId),
+                    ->where('class_id', $classId)
+                    ->inActiveYear(),
             );
         }
 
@@ -53,12 +54,13 @@ class SubjectController extends Controller
         $subjects = $subjectsQuery
             ->with([
                 'schedules' => fn ($query) => $query
-                    ->whereIn('class_id', $taughtClassIds)
+                    ->taughtBy($teacherId)
                     ->when($classId !== null, fn ($query) => $query->where('class_id', $classId))
                     ->ordered()
                     ->with('class:id,name'),
                 'teachingAssignments' => fn ($query) => $query
                     ->where('teacher_id', $teacherId)
+                    ->inActiveYear()
                     ->when($classId !== null, fn ($query) => $query->where('class_id', $classId))
                     ->with([
                         'class' => fn ($query) => $query->withCount('students'),
@@ -94,6 +96,7 @@ class SubjectController extends Controller
             TeachingAssignment::query()
                 ->where('teacher_id', $teacherId)
                 ->where('subject_id', $subject->id)
+                ->inActiveYear()
                 ->exists(),
             404,
         );
@@ -101,6 +104,7 @@ class SubjectController extends Controller
         $assignments = TeachingAssignment::query()
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $subject->id)
+            ->inActiveYear()
             ->with([
                 'class' => fn ($query) => $query->with(['students.user:id,name,email', 'academicYear:id,name']),
                 'academicYear:id,name',

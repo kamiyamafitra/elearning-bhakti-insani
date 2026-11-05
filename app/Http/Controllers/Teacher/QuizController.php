@@ -25,6 +25,7 @@ class QuizController extends Controller
 
         $quizzes = Quiz::query()
             ->where('teacher_id', $user->id)
+            ->whereHas('class', fn ($query) => $query->inActiveYear())
             ->with(['subject:id,code,name', 'class:id,name'])
             ->withCount(['questions', 'attempts'])
             ->withAvg(['attempts as average_score' => fn ($query) => $query->whereNotNull('submitted_at')], 'score')
@@ -230,6 +231,7 @@ class QuizController extends Controller
     {
         return TeachingAssignment::query()
             ->where('teacher_id', $teacher->id)
+            ->inActiveYear()
             ->with(['subject:id,name', 'class:id,name'])
             ->get()
             ->unique(fn (TeachingAssignment $assignment) => "{$assignment->subject_id}-{$assignment->class_id}")

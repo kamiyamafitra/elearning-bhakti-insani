@@ -87,6 +87,10 @@
             </select>
         </div>
 
+        @if ($perPage !== $defaultPerPage)
+            <input type="hidden" name="per_page" value="{{ $perPage }}">
+        @endif
+
         <button class="btn btn-primary directory-toolbar__button" type="submit">
             <i class="bi bi-funnel me-1" aria-hidden="true"></i>
             Terapkan
@@ -126,6 +130,9 @@
                 @endif
             </div>
         @else
+            @include('admin._per-page', ['paginator' => $students, 'route' => 'admin.students.index', 'noun' => 'siswa', 'keep' => ['q' => $search, 'class_id' => $classId]])
+
+
             <div class="table-responsive">
                 <table class="directory-table">
                     <thead>

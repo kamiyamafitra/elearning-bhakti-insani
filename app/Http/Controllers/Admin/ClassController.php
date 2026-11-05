@@ -116,16 +116,24 @@ class ClassController extends Controller
 
     public function destroy(Classes $class): RedirectResponse
     {
-        $hasCourseData = Assignment::where('class_id', $class->id)->exists()
-            || LearningMaterial::where('class_id', $class->id)->exists()
-            || Quiz::where('class_id', $class->id)->exists()
-            || Discussion::where('class_id', $class->id)->exists();
+        $blockers = collect([
+            'siswa' => $class->students()->exists(),
+            'guru pengajar' => $class->teachingAssignments()->exists(),
+            'tugas' => Assignment::where('class_id', $class->id)->exists(),
+            'materi' => LearningMaterial::where('class_id', $class->id)->exists(),
+            'kuis' => Quiz::where('class_id', $class->id)->exists(),
+            'diskusi' => Discussion::where('class_id', $class->id)->exists(),
+        ])->filter()->keys();
 
-        if ($hasCourseData || $class->students()->exists() || $class->teachingAssignments()->exists() || $class->classMemberships()->exists()) {
-            return back()->with('error', 'Kelas tidak dapat dihapus karena masih memiliki data terkait.');
+        if ($blockers->isNotEmpty()) {
+            return back()->with('error', 'Kelas tidak dapat dihapus karena masih memiliki '.$blockers->implode(', ').'.');
         }
 
-        $class->delete();
+        // With no coursework left, the class history only records who passed through, so it goes with the class.
+        DB::transaction(function () use ($class): void {
+            $class->classMemberships()->delete();
+            $class->delete();
+        });
 
         return redirect()->route('admin.classes.index')->with('success', 'Kelas berhasil dihapus.');
     }

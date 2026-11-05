@@ -65,7 +65,7 @@ class ClassCopyController extends Controller
                 Classes::create([
                     'academic_year_id' => $academicYear->id,
                     'name' => $class->name,
-                    'code' => $this->uniqueCodeFor($class->code, $academicYear),
+                    'code' => Classes::uniqueCodeFor($class->code, $academicYear),
                     'level' => $class->level,
                 ]);
             }
@@ -80,25 +80,5 @@ class ClassCopyController extends Controller
         return redirect()
             ->route('admin.classes.index', ['academic_year_id' => $academicYear->id])
             ->with('success', $message);
-    }
-
-    /**
-     * Build a code such as "X-TKJ-1-2627" for the target year, staying within 20 characters and unique.
-     */
-    private function uniqueCodeFor(string $sourceCode, AcademicYear $academicYear): string
-    {
-        $baseCode = preg_replace('/-\d{4}$/', '', $sourceCode);
-        [$firstYear, $secondYear] = explode('/', $academicYear->name) + [1 => ''];
-        $suffix = '-'.substr($firstYear, -2).substr($secondYear, -2);
-
-        $code = Str::limit($baseCode, 20 - strlen($suffix), '').$suffix;
-        $counter = 2;
-
-        while (Classes::where('code', $code)->exists()) {
-            $counterSuffix = $suffix.'-'.$counter++;
-            $code = Str::limit($baseCode, 20 - strlen($counterSuffix), '').$counterSuffix;
-        }
-
-        return $code;
     }
 }

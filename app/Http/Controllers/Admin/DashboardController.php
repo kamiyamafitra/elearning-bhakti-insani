@@ -51,6 +51,8 @@ class DashboardController extends Controller
             'ungradedByTeacher' => $this->ungradedByTeacher(),
             'teachersWithoutMaterials' => $this->teachersWithoutMaterials($activeYear, $classIds),
             'latestAnnouncements' => Announcement::where('is_published', true)
+                ->where(fn ($query) => $query->whereNull('published_at')->orWhere('published_at', '<=', now()))
+                ->notExpired()
                 ->latest('published_at')
                 ->limit(5)
                 ->get(['id', 'title', 'published_at', 'visibility']),

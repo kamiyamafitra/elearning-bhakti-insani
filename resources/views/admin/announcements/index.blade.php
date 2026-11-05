@@ -52,13 +52,15 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($announcement->is_published)
-                                    <span class="badge text-bg-success">Dipublikasikan</span>
-                                @else
-                                    <span class="badge text-bg-secondary">Draf</span>
+                                @php($status = $announcement->statusLabel())
+                                <span class="badge {{ ['Berakhir' => 'text-bg-warning', 'Terjadwal' => 'text-bg-info', 'Dipublikasikan' => 'text-bg-success'][$status] ?? 'text-bg-secondary' }}">{{ $status }}</span>
+                            </td>
+                            <td>
+                                {{ $announcement->published_at?->format('d-m-Y H:i') ?? '-' }}
+                                @if ($announcement->expires_at)
+                                    <div class="small text-muted">s.d. {{ $announcement->expires_at->format('d-m-Y H:i') }}</div>
                                 @endif
                             </td>
-                            <td>{{ $announcement->published_at?->format('d-m-Y H:i') ?? '-' }}</td>
                             <td class="text-end pe-3">
                                 <a href="{{ route('admin.announcements.show', $announcement) }}" class="btn btn-sm btn-outline-info" aria-label="Lihat {{ $announcement->title }}">Lihat</a>
                                 <a href="{{ route('admin.announcements.edit', $announcement) }}" class="btn btn-sm btn-outline-primary">Ubah</a>

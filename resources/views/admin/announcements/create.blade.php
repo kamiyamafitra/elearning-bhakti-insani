@@ -15,7 +15,7 @@
 
 <div class="card card-dashboard">
     <div class="card-body">
-        <form class="admin-form" method="POST" action="{{ route('admin.announcements.store') }}">
+        <form class="admin-form" method="POST" action="{{ route('admin.announcements.store') }}" enctype="multipart/form-data">
             @csrf
 
             <div class="row g-3">
@@ -32,6 +32,9 @@
                     @error('content')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div>
+                <div class="mb-3">
+                    @include('discussions._image-field')
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="visibility">Visibilitas</label>
@@ -75,16 +78,19 @@
                     @error('published_at')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                    <div class="form-text">Kosongkan untuk memakai waktu saat ini.</div>
+                    <div class="form-text">Kosongkan agar langsung tayang saat disimpan, atau isi waktu nanti untuk menjadwalkan.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="expires_at">Tanggal Berakhir <span class="text-muted fw-normal">(opsional)</span></label>
+                    <input type="datetime-local" id="expires_at" name="expires_at" class="form-control @error('expires_at') is-invalid @enderror" value="{{ old('expires_at') }}">
+                    @error('expires_at')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text">Pengumuman otomatis disembunyikan setelah waktu ini, lalu dihapus permanen 6 bulan kemudian. Kosongkan agar tampil terus.</div>
                 </div>
             </div>
 
-            <div class="form-check my-3">
-                <input class="form-check-input" type="checkbox" name="is_published" value="1" id="is_published" @checked(old('is_published'))>
-                <label class="form-check-label" for="is_published">Publikasikan sekarang</label>
-            </div>
-
-            <div class="admin-form__actions">
+            <div class="admin-form__actions mt-3">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-check2-circle me-1" aria-hidden="true"></i> Simpan
                 </button>

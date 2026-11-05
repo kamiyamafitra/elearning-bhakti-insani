@@ -43,7 +43,17 @@ class User extends Authenticatable
             'password' => 'hashed',
             'must_change_password' => 'boolean',
             'is_active' => 'boolean',
+            'announcements_seen_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Remember that the user has looked at the announcement list, which clears the "new" badge.
+     * Saved quietly so it doesn't fill the activity log on every visit.
+     */
+    public function markAnnouncementsSeen(): void
+    {
+        $this->forceFill(['announcements_seen_at' => now()])->saveQuietly();
     }
 
     /**
@@ -148,13 +158,14 @@ class User extends Authenticatable
     }
 
     /**
-     * The classes this teacher is assigned to.
+     * The classes this teacher is assigned to in the active academic year.
      *
      * @return Collection<int, int>
      */
     public function taughtClassIds(): Collection
     {
         return $this->teachingAssignments()
+            ->inActiveYear()
             ->pluck('class_id')
             ->unique()
             ->values();

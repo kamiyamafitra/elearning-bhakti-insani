@@ -201,6 +201,7 @@ class DiscussionController extends Controller
                 fn ($query) => $query->where('teacher_id', $user->id),
                 fn ($query) => $query->where('class_id', $classId),
             )
+            ->inActiveYear()
             ->with(['class:id,name', 'subject:id,name'])
             ->get()
             ->map(fn (TeachingAssignment $assignment): object => (object) [

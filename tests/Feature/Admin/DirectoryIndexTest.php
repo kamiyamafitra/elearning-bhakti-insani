@@ -118,6 +118,48 @@ class DirectoryIndexTest extends TestCase
         $response->assertDontSee('Bunga Lestari');
     }
 
+    public function test_student_index_shows_five_per_page_by_default_and_the_limit_can_be_changed_in_steps_of_five(): void
+    {
+        foreach (range(1, 23) as $number) {
+            $this->createStudent("Siswa {$number}", "siswa{$number}@example.com");
+        }
+
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->get(route('admin.students.index'))
+            ->assertOk()
+            ->assertViewHas('students', fn ($students) => $students->count() === 5 && $students->lastPage() === 5)
+            ->assertSee('Menampilkan 1–5 dari 23 siswa');
+
+        $this->actingAs($admin)->get(route('admin.students.index', ['per_page' => 15, 'page' => 2]))
+            ->assertViewHas('students', fn ($students) => $students->count() === 8 && $students->lastPage() === 2)
+            ->assertSee('Menampilkan 16–23 dari 23 siswa')
+            ->assertSee('per_page=15', false);
+
+        foreach ([7, 0, 500, 'abc'] as $invalid) {
+            $this->actingAs($admin)->get(route('admin.students.index', ['per_page' => $invalid]))
+                ->assertViewHas('perPage', 5);
+        }
+    }
+
+    public function test_teacher_index_page_size_can_be_changed_and_survives_a_search(): void
+    {
+        foreach (range(1, 12) as $number) {
+            $this->createTeacher("Guru {$number}", "guru{$number}@example.com", ['nip' => "1980{$number}"]);
+        }
+
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->get(route('admin.teachers.index'))
+            ->assertViewHas('teachers', fn ($teachers) => $teachers->count() === 5 && $teachers->lastPage() === 3)
+            ->assertSee('Menampilkan 1–5 dari 12 guru');
+
+        $this->actingAs($admin)->get(route('admin.teachers.index', ['per_page' => 10, 'q' => 'Guru']))
+            ->assertViewHas('teachers', fn ($teachers) => $teachers->count() === 10 && $teachers->lastPage() === 2)
+            ->assertSee('<input type="hidden" name="q" value="Guru">', false)
+            ->assertSee('<input type="hidden" name="per_page" value="10">', false);
+    }
+
     public function test_student_index_shows_an_empty_state_when_no_students_exist(): void
     {
         $response = $this->actingAs($this->admin())->get(route('admin.students.index'));

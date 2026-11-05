@@ -3,18 +3,32 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreQuizQuestionsRequest;
 use App\Models\Announcement;
 use App\Models\Classes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AnnouncementController extends Controller
 {
+    private const IMAGE_RULES = ['nullable', 'file', 'mimes:png,jpg,jpeg,webp', 'max:'.StoreQuizQuestionsRequest::MAX_IMAGE_KILOBYTES];
+
+    private const IMAGE_MESSAGES = [
+        'image.file' => 'Gambar gagal diunggah. Coba lagi.',
+        'image.mimes' => 'Gambar harus berformat PNG, JPG, atau WEBP.',
+        'image.max' => 'Ukuran gambar maksimal 2 MB.',
+    ];
+
     public function index(Request $request): View
     {
+        $request->user()->markAnnouncementsSeen();
         $search = trim((string) $request->input('q', ''));
 
         $announcements = Announcement::with(['creator:id,name', 'class:id,name'])
@@ -47,9 +61,15 @@ class AnnouncementController extends Controller
             ])],
             'target_role' => ['nullable', 'required_if:visibility,role', Rule::in(['teacher', 'student'])],
             'class_id' => ['nullable', 'required_if:visibility,class', 'exists:classes,id'],
-            'is_published' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
-        ]);
+            'expires_at' => ['nullable', 'date'],
+            'image' => self::IMAGE_RULES,
+            'remove_image' => ['nullable', 'boolean'],
+        ], self::IMAGE_MESSAGES);
+
+        // Saving publishes: right away, or at the chosen time when that is still in the future.
+        $publishedAt = $validated['published_at'] ?? now();
+        $this->ensureEndsAfterStart($validated['expires_at'] ?? null, $publishedAt);
 
         Announcement::create([
             'title' => $validated['title'],
@@ -62,8 +82,10 @@ class AnnouncementController extends Controller
                 ? ($validated['class_id'] ?? null)
                 : null,
             'created_by' => Auth::id(),
-            'is_published' => $request->boolean('is_published'),
-            'published_at' => $request->boolean('is_published') ? ($validated['published_at'] ?? now()) : null,
+            'is_published' => true,
+            'published_at' => $publishedAt,
+            'expires_at' => $validated['expires_at'] ?? null,
+            'image_path' => $request->file('image')?->store(Announcement::IMAGE_DIRECTORY, 'local'),
         ]);
 
         return redirect()->route('admin.announcements.index')->with('success', 'Pengumuman berhasil ditambahkan.');
@@ -74,6 +96,11 @@ class AnnouncementController extends Controller
         $announcement->load(['creator:id,name', 'class:id,name']);
 
         return view('admin.announcements.show', compact('announcement'));
+    }
+
+    public function image(Announcement $announcement): BinaryFileResponse
+    {
+        return $announcement->imageResponse();
     }
 
     public function edit(Announcement $announcement): View
@@ -95,9 +122,21 @@ class AnnouncementController extends Controller
             ])],
             'target_role' => ['nullable', 'required_if:visibility,role', Rule::in(['teacher', 'student'])],
             'class_id' => ['nullable', 'required_if:visibility,class', 'exists:classes,id'],
-            'is_published' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
-        ]);
+            'expires_at' => ['nullable', 'date'],
+            'image' => self::IMAGE_RULES,
+            'remove_image' => ['nullable', 'boolean'],
+        ], self::IMAGE_MESSAGES);
+
+        $publishedAt = $validated['published_at'] ?? now();
+        $this->ensureEndsAfterStart($validated['expires_at'] ?? null, $publishedAt);
+
+        $oldImage = $announcement->image_path;
+        $imagePath = match (true) {
+            $request->hasFile('image') => $request->file('image')->store(Announcement::IMAGE_DIRECTORY, 'local'),
+            $request->boolean('remove_image') => null,
+            default => $oldImage,
+        };
 
         $announcement->update([
             'title' => $validated['title'],
@@ -109,9 +148,15 @@ class AnnouncementController extends Controller
             'class_id' => $validated['visibility'] === Announcement::VISIBILITY_CLASS
                 ? ($validated['class_id'] ?? null)
                 : null,
-            'is_published' => $request->boolean('is_published'),
-            'published_at' => $request->boolean('is_published') ? ($announcement->published_at ?? now()) : null,
+            'is_published' => true,
+            'published_at' => $publishedAt,
+            'expires_at' => $validated['expires_at'] ?? null,
+            'image_path' => $imagePath,
         ]);
+
+        if ($oldImage && $oldImage !== $imagePath) {
+            Storage::disk('local')->delete($oldImage);
+        }
 
         return redirect()->route('admin.announcements.index')->with('success', 'Pengumuman berhasil diperbarui.');
     }
@@ -121,5 +166,17 @@ class AnnouncementController extends Controller
         $announcement->delete();
 
         return redirect()->route('admin.announcements.index')->with('success', 'Pengumuman berhasil dihapus.');
+    }
+
+    /**
+     * An announcement has to be visible for some time before it ends.
+     */
+    private function ensureEndsAfterStart(?string $expiresAt, mixed $publishedAt): void
+    {
+        if ($expiresAt !== null && Carbon::parse($expiresAt)->lte(Carbon::parse($publishedAt ?? now()))) {
+            throw ValidationException::withMessages([
+                'expires_at' => 'Tanggal berakhir harus setelah tanggal publikasi.',
+            ]);
+        }
     }
 }

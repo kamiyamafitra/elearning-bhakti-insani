@@ -23,6 +23,9 @@
                     &middot; {{ $announcement->created_at?->format('d-m-Y H:i') ?? '-' }}
                 </div>
                 <div style="white-space: pre-line;">{{ $announcement->content }}</div>
+                @if ($announcement->image_path)
+                    @include('announcements._image', ['imageUrl' => route('admin.announcements.image', $announcement)])
+                @endif
             </div>
         </div>
     </div>
@@ -46,11 +49,15 @@
                 </div>
                 <div class="mb-3">
                     <div class="text-muted small">Status</div>
-                    <div class="fw-semibold">{{ $announcement->is_published ? 'Dipublikasikan' : 'Draf' }}</div>
+                    <div class="fw-semibold">{{ $announcement->statusLabel() }}</div>
                 </div>
                 <div class="mb-3">
                     <div class="text-muted small">Tanggal Publikasi</div>
                     <div class="fw-semibold">{{ $announcement->published_at?->format('d-m-Y H:i') ?? '-' }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small">Tanggal Berakhir</div>
+                    <div class="fw-semibold">{{ $announcement->expires_at?->format('d-m-Y H:i') ?? 'Tidak ada' }}</div>
                 </div>
                 <div class="mb-3">
                     <div class="text-muted small">Dibuat Oleh</div>

@@ -30,6 +30,7 @@
     <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('teacher.announcements.*') ? 'active' : '' }}" href="{{ route('teacher.announcements.index') }}">
             <i class="bi bi-megaphone"></i> Pengumuman
+            @include('layouts._new-announcement-badge')
         </a>
     </li>
     <li class="nav-item">

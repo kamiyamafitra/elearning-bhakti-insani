@@ -115,6 +115,7 @@ Route::middleware('auth')->group(function () {
         Route::get('classes/{class}/assign-students', [ClassController::class, 'assignStudents'])->name('classes.assign-students');
         Route::post('classes/{class}/assign-students', [ClassController::class, 'storeAssignStudents'])->name('classes.assign-students.store');
         Route::resource('subjects', SubjectController::class);
+        Route::get('announcements/{announcement}/image', [AnnouncementController::class, 'image'])->name('announcements.image');
         Route::resource('announcements', AnnouncementController::class);
     });
 
@@ -160,6 +161,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/announcements', [TeacherAnnouncementController::class, 'index'])->name('announcements.index');
         Route::get('/announcements/{announcement}', [TeacherAnnouncementController::class, 'show'])->name('announcements.show');
+        Route::get('/announcements/{announcement}/image', [TeacherAnnouncementController::class, 'image'])->name('announcements.image');
 
         Route::get('/profile', [TeacherProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [TeacherProfileController::class, 'update'])->name('profile.update');
@@ -195,6 +197,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/announcements', [StudentAnnouncementController::class, 'index'])->name('announcements.index');
         Route::get('/announcements/{announcement}', [StudentAnnouncementController::class, 'show'])->name('announcements.show');
+        Route::get('/announcements/{announcement}/image', [StudentAnnouncementController::class, 'image'])->name('announcements.image');
 
         Route::get('/profile', [StudentProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [StudentProfileController::class, 'update'])->name('profile.update');

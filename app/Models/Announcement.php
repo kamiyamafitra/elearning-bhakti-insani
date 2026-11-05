@@ -2,15 +2,24 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPrivateImage;
 use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Announcement extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, HasPrivateImage, LogsActivity, Prunable;
+
+    public const IMAGE_DIRECTORY = 'announcement-images';
+
+    /**
+     * Ended announcements are deleted, image included, this many months after their end time.
+     */
+    public const DELETE_AFTER_END_MONTHS = 6;
 
     public const VISIBILITY_ALL = 'all';
 
@@ -21,12 +30,14 @@ class Announcement extends Model
     protected $fillable = [
         'title',
         'content',
+        'image_path',
         'visibility',
         'target_role',
         'class_id',
         'created_by',
         'is_published',
         'published_at',
+        'expires_at',
     ];
 
     protected function casts(): array
@@ -34,7 +45,59 @@ class Announcement extends Model
         return [
             'is_published' => 'boolean',
             'published_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Visible announcements published since the user last opened the announcement list,
+     * leaving out the ones they posted themselves.
+     */
+    public function scopeUnreadBy(Builder $query, User $user): Builder
+    {
+        return $query->visibleTo($user)
+            ->where(fn (Builder $query) => $query->whereNull('created_by')->orWhere('created_by', '!=', $user->id))
+            ->when($user->announcements_seen_at, fn (Builder $query, $seenAt) => $query->where(
+                fn (Builder $query) => $query->where('published_at', '>', $seenAt)
+                    ->orWhere(fn (Builder $query) => $query->whereNull('published_at')->where('created_at', '>', $seenAt))
+            ));
+    }
+
+    /**
+     * Picked up by the daily model:prune run. Deleting one model at a time removes each image file too.
+     */
+    public function prunable(): Builder
+    {
+        return static::where('expires_at', '<', now()->subMonths(self::DELETE_AFTER_END_MONTHS));
+    }
+
+    /**
+     * Status label for the admin pages.
+     */
+    public function statusLabel(): string
+    {
+        return match (true) {
+            ! $this->is_published => 'Diturunkan',
+            $this->isExpired() => 'Berakhir',
+            $this->published_at?->isFuture() ?? false => 'Terjadwal',
+            default => 'Dipublikasikan',
+        };
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->isPast();
+    }
+
+    /**
+     * Hide announcements whose end time has passed.
+     */
+    public function scopeNotExpired(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query) {
+            $query->whereNull('expires_at')
+                ->orWhere('expires_at', '>', now());
+        });
     }
 
     public function creator(): BelongsTo
@@ -56,7 +119,8 @@ class Announcement extends Model
             ->where(function (Builder $query) {
                 $query->whereNull('published_at')
                     ->orWhere('published_at', '<=', now());
-            });
+            })
+            ->notExpired();
 
         if ($user->isAdmin()) {
             return $query;
@@ -81,7 +145,7 @@ class Announcement extends Model
             }
 
             if ($user->isTeacher()) {
-                $classIds = $user->teachingAssignments()->pluck('class_id')->unique();
+                $classIds = $user->teachingAssignments()->inActiveYear()->pluck('class_id')->unique();
 
                 if ($classIds->isNotEmpty()) {
                     $query->orWhere(function (Builder $query) use ($classIds) {

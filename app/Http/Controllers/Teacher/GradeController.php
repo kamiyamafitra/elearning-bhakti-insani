@@ -21,6 +21,7 @@ class GradeController extends Controller
 
         $assignments = TeachingAssignment::query()
             ->where('teacher_id', $user->id)
+            ->inActiveYear()
             ->with(['subject:id,code,name', 'class:id,name,code'])
             ->get();
 

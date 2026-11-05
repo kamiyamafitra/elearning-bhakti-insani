@@ -290,6 +290,7 @@ class AssignmentController extends Controller
         return TeachingAssignment::query()
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $subjectId)
+            ->inActiveYear()
             ->with('class:id,name,code')
             ->get()
             ->pluck('class')

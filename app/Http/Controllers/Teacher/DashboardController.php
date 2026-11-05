@@ -19,6 +19,7 @@ class DashboardController extends Controller
         $user = $request->user()->load('teacherProfile');
 
         $assignments = $user->teachingAssignments()
+            ->inActiveYear()
             ->with([
                 'subject:id,code,name',
                 'class' => fn ($query) => $query->withCount('students'),
@@ -30,7 +31,7 @@ class DashboardController extends Controller
 
         $schedules = ClassSchedule::query()
             ->with(['subject:id,code,name', 'class:id,name,code'])
-            ->whereIn('class_id', $classIds)
+            ->taughtBy((int) $user->id)
             ->orderBy('day_of_week')
             ->orderBy('start_time')
             ->get();
@@ -43,7 +44,9 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $assignmentQuery = fn () => Assignment::query()->where('teacher_id', $user->id);
+        $assignmentQuery = fn () => Assignment::query()
+            ->where('teacher_id', $user->id)
+            ->whereHas('class', fn (Builder $query) => $query->inActiveYear());
 
         $assignmentsCreated = $assignmentQuery()->count();
         $activeAssignments = $assignmentQuery()
@@ -52,7 +55,9 @@ class DashboardController extends Controller
             ->count();
 
         $submissionQuery = fn () => AssignmentSubmission::query()
-            ->whereHas('assignment', fn (Builder $query) => $query->where('teacher_id', $user->id));
+            ->whereHas('assignment', fn (Builder $query) => $query
+                ->where('teacher_id', $user->id)
+                ->whereHas('class', fn (Builder $query) => $query->inActiveYear()));
 
         $pendingGrading = $submissionQuery()->whereNull('graded_at')->count();
 

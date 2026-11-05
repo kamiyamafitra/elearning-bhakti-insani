@@ -68,6 +68,19 @@ class ClassSchedule extends Model
         return $query->orderBy('day_of_week')->orderBy('start_time');
     }
 
+    /**
+     * Limit to lessons the teacher actually teaches this year: the same subject in the same class.
+     */
+    public function scopeTaughtBy(Builder $query, int $teacherId): Builder
+    {
+        return $query->whereExists(fn ($query) => $query
+            ->from('teaching_assignments')
+            ->whereColumn('teaching_assignments.class_id', 'class_schedules.class_id')
+            ->whereColumn('teaching_assignments.subject_id', 'class_schedules.subject_id')
+            ->where('teaching_assignments.teacher_id', $teacherId)
+            ->whereIn('teaching_assignments.academic_year_id', AcademicYear::where('is_active', true)->select('id')));
+    }
+
     public static function formatTime(?string $time): string
     {
         return $time ? substr($time, 0, 5) : '-';
