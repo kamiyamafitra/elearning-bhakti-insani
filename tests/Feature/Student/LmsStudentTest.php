@@ -4,8 +4,11 @@ namespace Tests\Feature\Student;
 
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
+use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\Feature\Concerns\CreatesAcademicData;
 use Tests\TestCase;
@@ -294,6 +297,98 @@ class LmsStudentTest extends TestCase
         $this->assertNotSame('lms/submissions/lama.pdf', $submission->file_path);
         Storage::disk('local')->assertMissing('lms/submissions/lama.pdf');
         Storage::disk('local')->assertExists($submission->file_path);
+    }
+
+    public function test_double_submit_saves_over_the_submission_created_a_moment_earlier(): void
+    {
+        $teacher = $this->makeTeacher('Tatang Surtaman');
+        $class = $this->makeClass('10 PPLG');
+        $subject = $this->makeSubject('Bahasa Jepang', 'BJPN');
+        $student = $this->makeStudent($class, 'Mulyadi', '32587389573');
+        $this->assignTeacher($teacher, $class, $subject);
+
+        $assignment = $this->makeAssignment($subject, $class, $teacher, [
+            'allows_resubmission' => true,
+        ]);
+
+        Storage::disk('local')->put('lms/submissions/ketukan-pertama.pdf', 'ketukan pertama');
+        $this->saveConcurrentSubmissionAfterExistenceCheck($assignment, $student, 'lms/submissions/ketukan-pertama.pdf');
+
+        $this->actingAs($student)
+            ->post(route('student.assignments.submit', [$subject, $assignment]), [
+                'text_response' => 'Jawaban kedua.',
+                'file' => UploadedFile::fake()->create('jawaban.pdf', 30, 'application/pdf'),
+            ])
+            ->assertRedirect(route('student.assignments.show', [$subject, $assignment]))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseCount('assignment_submissions', 1);
+
+        $submission = AssignmentSubmission::query()->firstOrFail();
+
+        $this->assertSame('Jawaban kedua.', $submission->text_response);
+        Storage::disk('local')->assertExists($submission->file_path);
+        Storage::disk('local')->assertMissing('lms/submissions/ketukan-pertama.pdf');
+    }
+
+    public function test_double_submit_keeps_the_first_submission_when_resubmission_is_disallowed(): void
+    {
+        $teacher = $this->makeTeacher('Tatang Surtaman');
+        $class = $this->makeClass('10 PPLG');
+        $subject = $this->makeSubject('Bahasa Jepang', 'BJPN');
+        $student = $this->makeStudent($class, 'Mulyadi', '32587389573');
+        $this->assignTeacher($teacher, $class, $subject);
+
+        $assignment = $this->makeAssignment($subject, $class, $teacher, [
+            'allows_resubmission' => false,
+        ]);
+
+        Storage::disk('local')->put('lms/submissions/ketukan-pertama.pdf', 'ketukan pertama');
+        $this->saveConcurrentSubmissionAfterExistenceCheck($assignment, $student, 'lms/submissions/ketukan-pertama.pdf');
+
+        $this->actingAs($student)
+            ->post(route('student.assignments.submit', [$subject, $assignment]), [
+                'file' => UploadedFile::fake()->create('jawaban.pdf', 30, 'application/pdf'),
+            ])
+            ->assertRedirect(route('student.assignments.show', [$subject, $assignment]))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseCount('assignment_submissions', 1);
+
+        $submission = AssignmentSubmission::query()->firstOrFail();
+
+        $this->assertSame('lms/submissions/ketukan-pertama.pdf', $submission->file_path);
+        $this->assertSame(['lms/submissions/ketukan-pertama.pdf'], Storage::disk('local')->allFiles('lms/submissions'));
+    }
+
+    /**
+     * Imitates a double tap: right after this request checks for an earlier submission and finds none,
+     * the other tap saves its row, so this request's insert hits the unique key.
+     */
+    private function saveConcurrentSubmissionAfterExistenceCheck(Assignment $assignment, User $student, string $filePath): void
+    {
+        $inserted = false;
+
+        DB::listen(function (QueryExecuted $query) use (&$inserted, $assignment, $student, $filePath): void {
+            if ($inserted || ! str_starts_with($query->sql, 'select') || ! str_contains($query->sql, 'assignment_submissions')) {
+                return;
+            }
+
+            $inserted = true;
+
+            DB::table('assignment_submissions')->insert([
+                'assignment_id' => $assignment->id,
+                'student_id' => $student->id,
+                'text_response' => 'Jawaban pertama.',
+                'file_path' => $filePath,
+                'file_original_name' => 'jawaban.pdf',
+                'file_mime' => 'application/pdf',
+                'file_size' => 15,
+                'submitted_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
     }
 
     public function test_graded_submission_cannot_be_resubmitted_even_when_resubmission_is_allowed(): void

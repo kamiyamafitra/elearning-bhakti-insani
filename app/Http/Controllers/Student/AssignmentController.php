@@ -8,6 +8,7 @@ use App\Http\Requests\SubmitAssignmentRequest;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\Subject;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -96,37 +97,54 @@ class AssignmentController extends Controller
             ? $this->storeLmsFile($request->file('file'), 'lms/submissions')
             : null;
 
+        $attributes = [
+            'text_response' => $textResponse,
+            'submitted_at' => now(),
+            'score' => null,
+            'feedback' => null,
+            'graded_at' => null,
+            'graded_by' => null,
+        ];
+
+        if ($storedFile !== null) {
+            $attributes = array_merge($attributes, [
+                'file_path' => $storedFile['path'],
+                'file_original_name' => $storedFile['name'],
+                'file_mime' => $storedFile['mime'],
+                'file_size' => $storedFile['size'],
+            ]);
+        }
+
         try {
-            DB::transaction(function () use ($assignment, $existing, $user, $storedFile, $textResponse) {
-                $attributes = [
-                    'text_response' => $textResponse,
-                    'submitted_at' => now(),
-                    'score' => null,
-                    'feedback' => null,
-                    'graded_at' => null,
-                    'graded_by' => null,
-                ];
+            try {
+                DB::transaction(function () use ($assignment, $existing, $user, $attributes) {
+                    if ($existing !== null) {
+                        $existing->update($attributes);
 
-                if ($storedFile !== null) {
-                    $attributes = array_merge($attributes, [
-                        'file_path' => $storedFile['path'],
-                        'file_original_name' => $storedFile['name'],
-                        'file_mime' => $storedFile['mime'],
-                        'file_size' => $storedFile['size'],
-                    ]);
+                        return;
+                    }
+
+                    AssignmentSubmission::create(array_merge($attributes, [
+                        'assignment_id' => $assignment->id,
+                        'student_id' => $user->id,
+                    ]));
+                });
+            } catch (UniqueConstraintViolationException) {
+                // A second submit for the same student (double tap, slow connection) saved the row a moment
+                // earlier. The student still handed in their work, so keep theirs instead of showing an error.
+                $concurrent = AssignmentSubmission::query()
+                    ->where('assignment_id', $assignment->id)
+                    ->where('student_id', $user->id)
+                    ->firstOrFail();
+
+                if ($assignment->allows_resubmission && ! $concurrent->isGraded()) {
+                    $oldFilePath = $concurrent->file_path;
+                    $concurrent->update($attributes);
+                } elseif ($storedFile !== null) {
+                    $this->deleteLmsFile($storedFile['path']);
+                    $storedFile = null;
                 }
-
-                if ($existing !== null) {
-                    $existing->update($attributes);
-
-                    return;
-                }
-
-                AssignmentSubmission::create(array_merge($attributes, [
-                    'assignment_id' => $assignment->id,
-                    'student_id' => $user->id,
-                ]));
-            });
+            }
         } catch (\Throwable $exception) {
             if ($storedFile !== null) {
                 $this->deleteLmsFile($storedFile['path']);
