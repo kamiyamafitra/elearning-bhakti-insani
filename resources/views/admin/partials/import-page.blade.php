@@ -44,8 +44,8 @@
                 <form class="admin-form" method="POST" action="{{ route($storeRoute) }}" enctype="multipart/form-data">
                     @csrf
 
-                    <label class="form-label" for="file">File Excel (.xlsx) atau CSV</label>
-                    <input type="file" id="file" name="file" class="form-control @error('file') is-invalid @enderror" accept=".xlsx,.csv" required>
+                    <label class="form-label" for="file">File Excel (.xlsx, .xls) atau CSV</label>
+                    <input type="file" id="file" name="file" class="form-control @error('file') is-invalid @enderror" accept=".xlsx,.xls,.csv" required>
                     @error('file')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror

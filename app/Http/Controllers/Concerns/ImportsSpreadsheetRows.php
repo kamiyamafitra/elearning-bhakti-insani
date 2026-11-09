@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Concerns;
 
 use Carbon\Carbon;
 use DateTimeInterface;
+use Dom\HTMLDocument;
+use Generator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,19 +51,26 @@ trait ImportsSpreadsheetRows
     protected function readImportRows(Request $request, array $requiredColumns, array $columnAliases = [], array $identifierColumns = []): array|RedirectResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,csv,txt', 'max:5120'],
+            'file' => ['required', 'file', 'extensions:xlsx,xls,csv,txt', 'mimes:xlsx,xls,html,csv,txt', 'max:5120'],
         ], [
             'file.required' => 'Pilih file yang akan diimpor.',
-            'file.mimes' => 'File harus berformat .xlsx atau .csv.',
+            'file.extensions' => 'File harus berformat .xlsx, .xls, atau .csv.',
+            'file.mimes' => 'File harus berformat .xlsx, .xls, atau .csv.',
             'file.max' => 'Ukuran file maksimal 5 MB.',
         ]);
+
+        $file = $request->file('file');
+
+        if (strtolower($file->getClientOriginalExtension()) === 'xls' && ! $this->isHtmlTableFile($file->getRealPath())) {
+            return back()->with('error', 'File .xls versi lama tidak dapat dibaca. Buka file di Excel, pilih Simpan Sebagai, lalu simpan sebagai .xlsx.');
+        }
 
         $identifierErrors = [];
 
         try {
-            $rows = $this->readSpreadsheet($request->file('file'), $columnAliases, $identifierColumns, $identifierErrors);
+            $rows = $this->readSpreadsheet($file, $columnAliases, $identifierColumns, $identifierErrors);
         } catch (Throwable) {
-            return back()->with('error', 'File tidak dapat dibaca. Pastikan file berformat .xlsx atau .csv yang valid.');
+            return back()->with('error', 'File tidak dapat dibaca. Pastikan file berformat .xlsx, .xls, atau .csv yang valid.');
         }
 
         if ($rows === []) {
@@ -86,7 +95,7 @@ trait ImportsSpreadsheetRows
     }
 
     /**
-     * Read the first sheet of an .xlsx or .csv file, using the first row as column names.
+     * Read the first sheet of an .xlsx, .xls (school-system export) or .csv file, using the first row as column names.
      *
      * @param  array<string, string>  $columnAliases
      * @param  list<string>  $identifierColumns
@@ -95,10 +104,59 @@ trait ImportsSpreadsheetRows
      */
     private function readSpreadsheet(UploadedFile $file, array $columnAliases, array $identifierColumns, array &$identifierErrors): array
     {
-        $path = $file->getRealPath();
-        $isXlsx = strtolower($file->getClientOriginalExtension()) === 'xlsx';
+        $headers = null;
+        $rows = [];
 
-        $reader = $isXlsx
+        foreach ($this->spreadsheetRows($file) as $rowNumber => $rawValues) {
+            $values = array_map(fn ($value) => $this->normalizeCellValue($value), $rawValues);
+
+            if ($headers === null) {
+                $headers = array_map(fn (string $header) => $this->normalizeColumnName($header, $columnAliases), $values);
+
+                continue;
+            }
+
+            if (implode('', $values) === '') {
+                continue;
+            }
+
+            $record = [];
+
+            foreach ($headers as $index => $header) {
+                if ($header !== '') {
+                    $record[$header] = $values[$index] ?? '';
+                }
+
+                $rawValue = $rawValues[$index] ?? null;
+
+                if (in_array($header, $identifierColumns, true) && (is_int($rawValue) || is_float($rawValue)) && abs($rawValue) >= $this->largestSafeSpreadsheetNumber) {
+                    $identifierErrors[$rowNumber][] = Str::upper($header).' sudah dibulatkan oleh Excel karena tersimpan sebagai angka. Ubah format selnya menjadi Text, lalu ketik ulang.';
+                }
+            }
+
+            $rows[$rowNumber] = $record;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Yield each row's cell values keyed by row number, from the first sheet only.
+     *
+     * @return Generator<int, list<mixed>>
+     */
+    private function spreadsheetRows(UploadedFile $file): Generator
+    {
+        $path = $file->getRealPath();
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        if ($extension === 'xls') {
+            yield from $this->htmlTableRows($path);
+
+            return;
+        }
+
+        $reader = $extension === 'xlsx'
             ? new XlsxReader(new XlsxOptions(SHOULD_PRESERVE_EMPTY_ROWS: true))
             : new CsvReader(new CsvOptions(
                 SHOULD_PRESERVE_EMPTY_ROWS: true,
@@ -107,40 +165,10 @@ trait ImportsSpreadsheetRows
 
         $reader->open($path);
 
-        $headers = null;
-        $rows = [];
-
         try {
             foreach ($reader->getSheetIterator() as $sheet) {
                 foreach ($sheet->getRowIterator() as $rowNumber => $row) {
-                    $rawValues = $row->toArray();
-                    $values = array_map(fn ($value) => $this->normalizeCellValue($value), $rawValues);
-
-                    if ($headers === null) {
-                        $headers = array_map(fn (string $header) => $this->normalizeColumnName($header, $columnAliases), $values);
-
-                        continue;
-                    }
-
-                    if (implode('', $values) === '') {
-                        continue;
-                    }
-
-                    $record = [];
-
-                    foreach ($headers as $index => $header) {
-                        if ($header !== '') {
-                            $record[$header] = $values[$index] ?? '';
-                        }
-
-                        $rawValue = $rawValues[$index] ?? null;
-
-                        if (in_array($header, $identifierColumns, true) && (is_int($rawValue) || is_float($rawValue)) && abs($rawValue) >= $this->largestSafeSpreadsheetNumber) {
-                            $identifierErrors[$rowNumber][] = Str::upper($header).' sudah dibulatkan oleh Excel karena tersimpan sebagai angka. Ubah format selnya menjadi Text, lalu ketik ulang.';
-                        }
-                    }
-
-                    $rows[$rowNumber] = $record;
+                    yield $rowNumber => $row->toArray();
                 }
 
                 break;
@@ -148,8 +176,50 @@ trait ImportsSpreadsheetRows
         } finally {
             $reader->close();
         }
+    }
 
-        return $rows;
+    /**
+     * School information systems often export an HTML table saved with an .xls name, which Excel opens as a sheet.
+     */
+    private function isHtmlTableFile(string $path): bool
+    {
+        $start = (string) file_get_contents($path, length: 4096);
+
+        return stripos($start, '<table') !== false || stripos($start, '<html') !== false || stripos($start, '<!doctype html') !== false;
+    }
+
+    /**
+     * Yield the rows of the first table in an HTML export, numbered in the order the rows appear.
+     *
+     * @return Generator<int, list<string>>
+     */
+    private function htmlTableRows(string $path): Generator
+    {
+        $html = (string) file_get_contents($path);
+        $document = HTMLDocument::createFromString($html, LIBXML_NOERROR, mb_check_encoding($html, 'UTF-8') ? 'UTF-8' : 'Windows-1252');
+        $table = $document->querySelector('table');
+
+        if ($table === null) {
+            return;
+        }
+
+        foreach ($table->querySelectorAll('tr') as $index => $tableRow) {
+            $values = [];
+
+            foreach ($tableRow->children as $cell) {
+                if (! in_array($cell->localName, ['td', 'th'], true)) {
+                    continue;
+                }
+
+                $values[] = trim(preg_replace('/\s+/u', ' ', $cell->textContent));
+
+                for ($extra = (int) $cell->getAttribute('colspan') - 1; $extra > 0; $extra--) {
+                    $values[] = '';
+                }
+            }
+
+            yield $index + 1 => $values;
+        }
     }
 
     /**

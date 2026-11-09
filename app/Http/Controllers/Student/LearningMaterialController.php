@@ -8,7 +8,7 @@ use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class LearningMaterialController extends Controller
 {
@@ -30,7 +30,7 @@ class LearningMaterialController extends Controller
         ]);
     }
 
-    public function download(Request $request, Subject $subject, LearningMaterial $material): StreamedResponse
+    public function download(Request $request, Subject $subject, LearningMaterial $material): Response
     {
         $this->ensureMaterialIsAccessible($request, $subject, $material);
 
@@ -41,10 +41,7 @@ class LearningMaterialController extends Controller
             404,
         );
 
-        return Storage::disk('local')->download(
-            $material->file_path,
-            $material->file_original_name ?: basename($material->file_path),
-        );
+        return $this->uploadedFileResponse($request, $material->file_path, $material->file_original_name);
     }
 
     private function ensureMaterialIsAccessible(Request $request, Subject $subject, LearningMaterial $material): void

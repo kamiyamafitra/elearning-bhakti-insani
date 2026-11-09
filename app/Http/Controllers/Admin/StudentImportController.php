@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\ImportsSpreadsheetRows;
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\ActivityLog;
 use App\Models\Classes;
 use App\Models\StudentProfile;
@@ -49,9 +50,23 @@ class StudentImportController extends Controller
         'jk' => 'jenis_kelamin',
         'l_p' => 'jenis_kelamin',
         'no_hp' => 'telepon',
+        'no_hp2' => 'telepon_orang_tua',
         'no_telepon' => 'telepon',
         'nama_wali' => 'nama_orang_tua',
         'telepon_wali' => 'telepon_orang_tua',
+    ];
+
+    /**
+     * Full major names used in class names, by the abbreviation the school export puts in brackets.
+     *
+     * @var array<string, string>
+     */
+    public const MAJOR_NAMES = [
+        'PPLG' => 'Pemrograman Perangkat Lunak dan Gim',
+        'TJKT' => 'Teknik Jaringan Komputer dan Telekomunikasi',
+        'PM' => 'Pemasaran',
+        'MPLB' => 'Manajemen Perkantoran dan Layanan Bisnis',
+        'DKV' => 'Desain Komunikasi Visual',
     ];
 
     public function create(): View
@@ -78,7 +93,14 @@ class StudentImportController extends Controller
         }
 
         $classes = Classes::with('academicYear:id,is_active')->get(['id', 'name', 'code', 'academic_year_id']);
-        $prepared = array_map(fn (array $row) => $this->prepareStudent($row, $classes), $rows);
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        $newClasses = [];
+        $prepared = [];
+
+        foreach ($rows as $rowNumber => $row) {
+            $prepared[$rowNumber] = $this->prepareStudent($row, $classes, $activeYear, $newClasses);
+        }
+
         $students = array_column($prepared, 0);
         $existing = [
             'nis' => $this->existingValues(StudentProfile::query(), 'nis', array_column($students, 'nis')),
@@ -115,8 +137,23 @@ class StudentImportController extends Controller
         set_time_limit(300);
         $passwords = $this->hashInitialPasswords(array_column($students, 'nis'));
 
-        ActivityLog::withoutLogging(fn () => DB::transaction(function () use ($students, $passwords): void {
+        ActivityLog::withoutLogging(fn () => DB::transaction(function () use ($students, $passwords, $newClasses, $activeYear): void {
+            $createdClassIds = [];
+
+            foreach ($newClasses as $code => $class) {
+                $createdClassIds[$code] = Classes::create([
+                    'academic_year_id' => $activeYear->id,
+                    'name' => $class['name'],
+                    'code' => Classes::where('code', $code)->exists() ? Classes::uniqueCodeFor($code, $activeYear) : $code,
+                    'level' => $class['level'],
+                ])->id;
+            }
+
             foreach ($students as $index => $student) {
+                if ($student['new_class_code'] !== null) {
+                    $student['class_id'] = $createdClassIds[$student['new_class_code']];
+                }
+
                 $user = User::create([
                     'name' => $student['name'],
                     'email' => $student['email'],
@@ -128,37 +165,55 @@ class StudentImportController extends Controller
 
                 StudentProfile::create([
                     'user_id' => $user->id,
-                    ...Arr::except($student, ['name', 'email']),
+                    ...Arr::except($student, ['name', 'email', 'new_class_code']),
                 ]);
             }
         }));
 
         ActivityLog::record(ActivityLog::ACTION_BULK, 'mengimpor '.count($students).' siswa dari file', properties: ['count' => count($students), 'nis' => array_column($students, 'nis')]);
 
+        $createdClasses = $newClasses !== [] ? ' '.count($newClasses).' kelas baru ikut dibuat: '.implode(', ', array_column($newClasses, 'name')).'.' : '';
+
         return redirect()->route('admin.students.index')
-            ->with('success', count($students).' siswa berhasil diimpor. Password awal setiap siswa adalah NIS masing-masing.');
+            ->with('success', count($students).' siswa berhasil diimpor. Password awal setiap siswa adalah NIS masing-masing.'.$createdClasses);
     }
 
     /**
      * Map one spreadsheet row to user and profile attributes and collect its validation errors.
      *
+     * Classes written the school-export way that don't exist yet are added to $newClasses, to be created on import.
+     *
      * @param  array<string, string>  $row
      * @param  Collection<int, Classes>  $classes
-     * @return array{0: array{name: string, email: string, nis: string, nisn: ?string, class_id: ?int, gender: ?string, birth_date: ?string, phone: ?string, address: ?string, parent_name: ?string, parent_phone: ?string}, 1: list<string>}
+     * @param  array<string, array{name: string, level: string}>  $newClasses
+     * @return array{0: array{name: string, email: string, nis: string, nisn: ?string, class_id: ?int, new_class_code: ?string, gender: ?string, birth_date: ?string, phone: ?string, address: ?string, parent_name: ?string, parent_phone: ?string}, 1: list<string>}
      */
-    private function prepareStudent(array $row, Collection $classes): array
+    private function prepareStudent(array $row, Collection $classes, ?AcademicYear $activeYear, array &$newClasses): array
     {
         $nis = $row['nis'] ?? '';
+        $name = $row['nama'] ?? '';
         $className = $row['kelas'] ?? '';
         $gender = $row['jenis_kelamin'] ?? '';
         $birthDate = $row['tanggal_lahir'] ?? '';
+        $classId = $className !== '' ? $this->findClassId($classes, $className) : null;
+        $exportClass = $className !== '' && $classId === null ? $this->parseExportClassName($className) : null;
+
+        if ($exportClass !== null) {
+            $classId = $this->findActiveYearClassId($classes, $exportClass);
+
+            if ($classId === null && $activeYear !== null) {
+                $newClasses[$exportClass['code']] = Arr::only($exportClass, ['name', 'level']);
+            }
+        }
 
         $student = [
-            'name' => $row['nama'] ?? '',
+            // School exports write names in capitals; names typed with any lowercase letter are kept as written.
+            'name' => $name === Str::upper($name) ? Str::title($name) : $name,
             'email' => Str::lower(($row['email'] ?? '') ?: ($nis !== '' ? "{$nis}@".self::EMAIL_DOMAIN : '')),
             'nis' => $nis,
             'nisn' => ($row['nisn'] ?? '') ?: null,
-            'class_id' => $className !== '' ? $this->findClassId($classes, $className) : null,
+            'class_id' => $classId,
+            'new_class_code' => $classId === null && $activeYear !== null ? $exportClass['code'] ?? null : null,
             'gender' => $gender !== '' ? $this->normalizeGender($gender) : null,
             'birth_date' => $birthDate !== '' ? $this->parseImportDate($birthDate) : null,
             'phone' => ($row['telepon'] ?? '') ?: null,
@@ -169,7 +224,7 @@ class StudentImportController extends Controller
 
         $validator = validator($student, [
             'name' => ['required', 'string', 'max:255'],
-            'nis' => ['required', 'alpha_dash', 'max:20'],
+            'nis' => ['required', 'regex:/^[A-Za-z0-9._-]+$/', 'max:20'],
             'email' => ['nullable', 'email', 'max:255'],
             'nisn' => ['nullable', 'digits:10'],
             'phone' => ['nullable', 'string', 'max:20'],
@@ -178,7 +233,7 @@ class StudentImportController extends Controller
         ], [
             'name.required' => 'Nama wajib diisi.',
             'nis.required' => 'NIS wajib diisi.',
-            'nis.alpha_dash' => 'NIS hanya boleh berisi huruf, angka, dan tanda hubung.',
+            'nis.regex' => 'NIS hanya boleh berisi huruf, angka, titik, dan tanda hubung.',
             'nisn.digits' => 'NISN '.($student['nisn'] ?? '').' harus 10 digit. Jika angka 0 di depan hilang, ubah format selnya menjadi Text.',
             'email.email' => "Email {$student['email']} tidak valid.",
         ], [
@@ -190,8 +245,10 @@ class StudentImportController extends Controller
 
         $errors = $validator->errors()->all();
 
-        if ($className !== '' && $student['class_id'] === null) {
-            $errors[] = "Kelas {$className} tidak ditemukan. Gunakan kode atau nama kelas yang sudah terdaftar.";
+        if ($className !== '' && $student['class_id'] === null && $student['new_class_code'] === null) {
+            $errors[] = $exportClass !== null
+                ? "Kelas {$className} tidak dapat dibuat karena belum ada tahun ajaran aktif."
+                : "Kelas {$className} tidak ditemukan. Gunakan kode atau nama kelas yang sudah terdaftar.";
         }
 
         if ($gender !== '' && $student['gender'] === null) {
@@ -227,6 +284,42 @@ class StudentImportController extends Controller
         }
 
         return $matchingByName->count() === 1 ? $matchingByName->first()->id : null;
+    }
+
+    /**
+     * Read a class written the school-export way, such as "12-Pemrograman Perangkat Lunak dan GIM (PPLG)-1",
+     * as "XII Pemrograman Perangkat Lunak dan Gim 1" with code XII-PPLG-1.
+     *
+     * @return array{name: string, code: string, level: string}|null
+     */
+    private function parseExportClassName(string $value): ?array
+    {
+        if (! preg_match('/^(10|11|12|X|XI|XII)\s*-.*\(\s*([A-Za-z0-9]+)\s*\)\s*-\s*(\d+)$/i', $value, $match)) {
+            return null;
+        }
+
+        $level = ['10' => 'X', '11' => 'XI', '12' => 'XII'][$match[1]] ?? Str::upper($match[1]);
+        $major = Str::upper($match[2]);
+
+        return [
+            'name' => $level.' '.(self::MAJOR_NAMES[$major] ?? $major).' '.$match[3],
+            'code' => "{$level}-{$major}-{$match[3]}",
+            'level' => $level,
+        ];
+    }
+
+    /**
+     * Find an export class among the active year's classes, by name or by code without its year suffix.
+     *
+     * @param  Collection<int, Classes>  $classes
+     * @param  array{name: string, code: string, level: string}  $exportClass
+     */
+    private function findActiveYearClassId(Collection $classes, array $exportClass): ?int
+    {
+        return $classes->first(fn (Classes $class) => $class->academicYear?->is_active && (
+            Str::lower($class->name) === Str::lower($exportClass['name'])
+            || Str::lower(preg_replace('/-\d{4}(-\d+)?$/', '', $class->code)) === Str::lower($exportClass['code'])
+        ))?->id;
     }
 
     private function normalizeGender(string $value): ?string

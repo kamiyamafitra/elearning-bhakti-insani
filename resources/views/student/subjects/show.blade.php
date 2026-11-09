@@ -141,6 +141,7 @@
                                     <i class="bi bi-book me-1" aria-hidden="true"></i> Buka Materi
                                 </a>
                                 @if ($material->hasFile())
+                                    @include('files._preview-button', ['url' => route('student.materials.download', [$subject, $material]), 'path' => $material->file_path, 'name' => $material->file_original_name])
                                     <a href="{{ route('student.materials.download', [$subject, $material]) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-download me-1" aria-hidden="true"></i> Unduh Materi
                                     </a>

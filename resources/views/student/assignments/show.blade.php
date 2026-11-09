@@ -56,6 +56,7 @@
 
         <div class="d-flex flex-wrap align-items-center gap-2 mt-4">
             @if ($assignment->hasAttachment())
+                @include('files._preview-button', ['url' => route('student.assignments.download', [$subject, $assignment]), 'path' => $assignment->attachment_path, 'name' => $assignment->attachment_original_name, 'class' => 'btn btn-primary'])
                 <a href="{{ route('student.assignments.download', [$subject, $assignment]) }}" class="btn btn-outline-primary">
                     <i class="bi bi-download me-1" aria-hidden="true"></i> Unduh Lampiran Tugas
                 </a>
@@ -98,6 +99,7 @@
                 @if ($submission->hasFile())
                     <div class="col-12">
                         <div class="text-muted small">Berkas yang Dikumpulkan</div>
+                        @include('files._preview-button', ['url' => route('student.submissions.download', [$subject, $assignment]), 'path' => $submission->file_path, 'name' => $submission->file_original_name, 'class' => 'btn btn-sm btn-primary mt-1'])
                         <a href="{{ route('student.submissions.download', [$subject, $assignment]) }}" class="btn btn-sm btn-outline-primary mt-1">
                             <i class="bi bi-download me-1" aria-hidden="true"></i> {{ $submission->file_original_name }}
                         </a>
@@ -163,12 +165,12 @@
                     <div class="col-12">
                         <label class="form-label" for="file">Berkas Jawaban</label>
                         <input type="file" id="file" name="file" class="form-control @error('file') is-invalid @enderror"
-                               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.odt,.ods,.odp">
+                               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.odt,.ods,.odp,.jpg,.jpeg,.png,.webp">
                         @error('file')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         <div class="form-text">
-                            PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, ZIP, ODT, ODS, atau ODP. Maksimal 20 MB.
+                            PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, ZIP, ODT, ODS, ODP, atau foto (JPG, PNG, WEBP). Maksimal 20 MB.
                             @if ($submission?->hasFile())
                                 Unggah berkas baru untuk menggantikan berkas sebelumnya.
                             @endif

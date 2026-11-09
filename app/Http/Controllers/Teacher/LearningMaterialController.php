@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class LearningMaterialController extends Controller
 {
@@ -183,7 +183,7 @@ class LearningMaterialController extends Controller
         return $this->redirectToMaterials($subject, 'Materi pelajaran berhasil dihapus.');
     }
 
-    public function download(LearningMaterial $material): StreamedResponse
+    public function download(Request $request, LearningMaterial $material): Response
     {
         $this->authorize('download', $material);
 
@@ -192,10 +192,7 @@ class LearningMaterialController extends Controller
             404,
         );
 
-        return Storage::disk('local')->download(
-            $material->file_path,
-            $material->file_original_name ?: basename($material->file_path),
-        );
+        return $this->uploadedFileResponse($request, $material->file_path, $material->file_original_name);
     }
 
     /**

@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class AssignmentController extends Controller
 {
@@ -144,7 +144,7 @@ class AssignmentController extends Controller
             ->with('success', 'Tugas berhasil dikumpulkan.');
     }
 
-    public function downloadAttachment(Request $request, Subject $subject, Assignment $assignment): StreamedResponse
+    public function downloadAttachment(Request $request, Subject $subject, Assignment $assignment): Response
     {
         $this->ensureAssignmentIsAccessible($request, $subject, $assignment);
 
@@ -155,13 +155,10 @@ class AssignmentController extends Controller
             404,
         );
 
-        return Storage::disk('local')->download(
-            $assignment->attachment_path,
-            $assignment->attachment_original_name ?: basename($assignment->attachment_path),
-        );
+        return $this->uploadedFileResponse($request, $assignment->attachment_path, $assignment->attachment_original_name);
     }
 
-    public function downloadSubmission(Request $request, Subject $subject, Assignment $assignment): StreamedResponse
+    public function downloadSubmission(Request $request, Subject $subject, Assignment $assignment): Response
     {
         $this->ensureAssignmentIsAccessible($request, $subject, $assignment);
 
@@ -176,10 +173,7 @@ class AssignmentController extends Controller
             404,
         );
 
-        return Storage::disk('local')->download(
-            $submission->file_path,
-            $submission->file_original_name ?: basename($submission->file_path),
-        );
+        return $this->uploadedFileResponse($request, $submission->file_path, $submission->file_original_name);
     }
 
     private function ensureAssignmentIsAccessible(Request $request, Subject $subject, Assignment $assignment): void

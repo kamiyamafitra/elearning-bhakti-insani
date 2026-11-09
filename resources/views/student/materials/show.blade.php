@@ -35,7 +35,8 @@
 
         <div class="d-flex flex-wrap align-items-center gap-2 mt-4">
             @if ($material->hasFile())
-                <a href="{{ route('student.materials.download', [$subject, $material]) }}" class="btn btn-primary">
+                @include('files._preview-button', ['url' => route('student.materials.download', [$subject, $material]), 'path' => $material->file_path, 'name' => $material->file_original_name, 'class' => 'btn btn-primary'])
+                <a href="{{ route('student.materials.download', [$subject, $material]) }}" class="btn {{ \App\Http\Controllers\Controller::previewTypeFor($material->file_path) ? 'btn-outline-primary' : 'btn-primary' }}">
                     <i class="bi bi-download me-1" aria-hidden="true"></i> Unduh Materi
                 </a>
                 <span class="text-muted small">{{ $material->file_original_name }} &middot; {{ $material->readableFileSize() }}</span>

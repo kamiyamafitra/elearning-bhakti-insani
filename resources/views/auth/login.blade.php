@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Masuk ke E-Learning {{ $school->fullName() }} sebagai siswa, guru, atau administrator.">
     <title>Masuk - E-Learning {{ $school->fullName() }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('layouts._head-assets')
 </head>
 <body class="auth-page">
     <main class="auth-shell">

@@ -4,11 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'E-Learning '.$school->fullName())</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('layouts._head-assets')
 </head>
 <body class="app-body">
     @php
@@ -55,9 +51,16 @@
                 <button class="app-topbar__toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-label="Buka menu">
                     <i class="bi bi-list" aria-hidden="true"></i>
                 </button>
+                <button class="app-topbar__toggle d-none d-lg-inline-flex" type="button" data-sidebar-toggle aria-label="Ciutkan menu" title="Ciutkan menu">
+                    <i class="bi bi-layout-sidebar" aria-hidden="true"></i>
+                </button>
                 <a class="app-topbar__brand d-lg-none" href="{{ route($dashboardRoute) }}">{{ $school->name }}</a>
 
                 <div class="app-topbar__actions">
+                    <button class="app-icon-button" type="button" data-theme-toggle aria-label="Ganti tema terang/gelap" title="Ganti tema">
+                        <i class="bi bi-moon-stars app-theme-icon--light" aria-hidden="true"></i>
+                        <i class="bi bi-sun app-theme-icon--dark" aria-hidden="true"></i>
+                    </button>
                     <div class="dropdown">
                         <button class="app-user-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="app-avatar" aria-hidden="true">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 1)) }}</span>
@@ -106,6 +109,7 @@
             </footer>
         </div>
     </div>
+    @include('files._preview-modal')
     @stack('scripts')
 </body>
 </html>

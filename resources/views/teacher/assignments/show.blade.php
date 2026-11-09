@@ -46,6 +46,7 @@
 
         <div class="d-flex flex-wrap align-items-center gap-2">
             @if ($assignment->hasAttachment())
+                @include('files._preview-button', ['url' => route('teacher.assignments.download', $assignment), 'path' => $assignment->attachment_path, 'name' => $assignment->attachment_original_name])
                 <a href="{{ route('teacher.assignments.download', $assignment) }}" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-download me-1" aria-hidden="true"></i> {{ $assignment->attachment_original_name }}
                 </a>
@@ -182,7 +183,8 @@
                                     @if ($submission)
                                         <div class="d-inline-flex flex-wrap justify-content-end gap-1">
                                             @if ($submission->hasFile())
-                                                <a href="{{ route('teacher.submissions.download', [$assignment, $submission]) }}" class="btn btn-sm btn-outline-secondary">
+                                                @include('files._preview-button', ['url' => route('teacher.submissions.download', [$assignment, $submission]), 'path' => $submission->file_path, 'name' => $submission->file_original_name, 'class' => 'btn btn-sm btn-outline-primary', 'iconOnly' => true])
+                                                <a href="{{ route('teacher.submissions.download', [$assignment, $submission]) }}" class="btn btn-sm btn-outline-secondary" aria-label="Unduh {{ $submission->file_original_name }}" title="Unduh">
                                                     <i class="bi bi-download" aria-hidden="true"></i>
                                                 </a>
                                             @endif

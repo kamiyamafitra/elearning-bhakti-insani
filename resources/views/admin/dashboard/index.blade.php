@@ -23,25 +23,23 @@
     ];
 @endphp
 
-<div class="row g-3 mb-3">
-    @foreach ($statCards as $card)
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="card card-dashboard h-100 {{ $card['url'] ? 'position-relative' : '' }}">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon flex-shrink-0">
-                        <i class="bi {{ $card['icon'] }} fs-5" aria-hidden="true"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <div class="text-muted small text-truncate">{{ $card['label'] }}</div>
-                        <div class="h4 mb-0">{{ $card['value'] }}</div>
-                    </div>
+<div class="stat-grid-wrap mb-3">
+    <div class="stat-grid">
+        @foreach ($statCards as $card)
+            <div class="card card-dashboard stat-tile {{ $card['url'] ? 'position-relative' : '' }}">
+                <div class="stat-icon flex-shrink-0">
+                    <i class="bi {{ $card['icon'] }}" aria-hidden="true"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="stat-tile__label">{{ $card['label'] }}</div>
+                    <div class="stat-tile__value">{{ $card['value'] }}</div>
                 </div>
                 @if ($card['url'])
                     <a href="{{ $card['url'] }}" class="stretched-link" aria-label="Lihat {{ $card['label'] }}"></a>
                 @endif
             </div>
-        </div>
-    @endforeach
+        @endforeach
+    </div>
 </div>
 
 <div class="row g-3 mb-3">

@@ -152,6 +152,7 @@
 
                             <div class="d-flex flex-wrap align-items-center gap-2">
                                 @if ($material->hasFile())
+                                    @include('files._preview-button', ['url' => route('teacher.materials.download', $material), 'path' => $material->file_path, 'name' => $material->file_original_name])
                                     <a href="{{ route('teacher.materials.download', $material) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-download me-1" aria-hidden="true"></i> {{ $material->file_original_name }}
                                     </a>

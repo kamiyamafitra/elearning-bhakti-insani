@@ -19,7 +19,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class AssignmentController extends Controller
 {
@@ -231,7 +231,7 @@ class AssignmentController extends Controller
         return $this->redirectToAssignments($subject, 'Tugas berhasil dihapus.');
     }
 
-    public function downloadAttachment(Assignment $assignment): StreamedResponse
+    public function downloadAttachment(Request $request, Assignment $assignment): Response
     {
         $this->authorize('downloadAttachment', $assignment);
 
@@ -240,13 +240,10 @@ class AssignmentController extends Controller
             404,
         );
 
-        return Storage::disk('local')->download(
-            $assignment->attachment_path,
-            $assignment->attachment_original_name ?: basename($assignment->attachment_path),
-        );
+        return $this->uploadedFileResponse($request, $assignment->attachment_path, $assignment->attachment_original_name);
     }
 
-    public function downloadSubmission(Assignment $assignment, AssignmentSubmission $submission): StreamedResponse
+    public function downloadSubmission(Request $request, Assignment $assignment, AssignmentSubmission $submission): Response
     {
         $this->authorize('downloadSubmission', [$assignment, $submission]);
 
@@ -255,10 +252,7 @@ class AssignmentController extends Controller
             404,
         );
 
-        return Storage::disk('local')->download(
-            $submission->file_path,
-            $submission->file_original_name ?: basename($submission->file_path),
-        );
+        return $this->uploadedFileResponse($request, $submission->file_path, $submission->file_original_name);
     }
 
     public function grade(GradeSubmissionRequest $request, Assignment $assignment, AssignmentSubmission $submission): RedirectResponse

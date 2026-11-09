@@ -5,10 +5,10 @@
 @section('page-description', 'Pantau kelas, tugas, dan progres pembelajaran Anda.')
 
 @section('content')
-<div class="alert alert-primary border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2">
+<div class="welcome-banner d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div>
-        <div class="fw-semibold">Halo, {{ auth()->user()->name }}!</div>
-        <div class="small">
+        <div class="welcome-banner__title">Halo, {{ auth()->user()->name }}!</div>
+        <div class="welcome-banner__meta">
             @if ($teacher)
                 NIP {{ $teacher->nip ?: '-' }} &middot; {{ $totalClasses }} kelas &middot; {{ $totalSubjects }} mata pelajaran
             @else

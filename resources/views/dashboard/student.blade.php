@@ -5,10 +5,10 @@
 @section('page-description', 'Selamat belajar, akses materi, tugas, dan progres Anda di sini.')
 
 @section('content')
-<div class="alert alert-primary border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2">
+<div class="welcome-banner d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div>
-        <div class="fw-semibold">Halo, {{ auth()->user()->name }}!</div>
-        <div class="small">
+        <div class="welcome-banner__title">Halo, {{ auth()->user()->name }}!</div>
+        <div class="welcome-banner__meta">
             @if ($classroom)
                 Kelas {{ $classroom->name }} &middot; {{ $classroom->academicYear?->name ?? 'Tahun ajaran aktif' }}
             @else

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Http\Controllers\Admin\StudentImportController;
+use App\Models\Classes;
 use App\Models\StudentProfile;
 use App\Models\User;
 use DateTimeImmutable;
@@ -205,6 +207,66 @@ class StudentImportTest extends TestCase
         $this->actingAs($admin)->post(route('admin.students.import.store'), [
             'file' => UploadedFile::fake()->create('siswa.pdf', 10, 'application/pdf'),
         ])->assertSessionHasErrors('file');
+
+        $this->assertSame(0, StudentProfile::count());
+    }
+
+    public function test_school_export_xls_imports_students_and_creates_missing_classes(): void
+    {
+        $existing = $this->makeClass('XII Pemrograman Perangkat Lunak dan Gim 1');
+        $header = '<tr><th rowspan="2">No.</th><th rowspan="2">Nama Siswa</th><th rowspan="2">Kelas</th><th rowspan="2">NISN</th><th rowspan="2">NIS</th>'
+            .'<th rowspan="2">Jenis Kelamin</th><th rowspan="2">No.HP</th><th rowspan="2">No.HP2</th><th rowspan="2">Tanggal Lahir</th><th rowspan="2">Alamat</th><th rowspan="2">Hobby</th></tr><tr></tr>';
+        $row = fn (array $cells) => '<tr>'.implode('', array_map(fn (string $cell) => "<td>{$cell}</td>", $cells)).'</tr>';
+        $html = '<!DOCTYPE html><html><head><title>Export Data Siswa</title></head><body><center><h3>Export Data Siswa Tahun Ajaran 2026/2027</h3></center><table border="1">'
+            .$header
+            .$row(['1', 'AFDIL ALFARIZI HIDAYAT', '12-Pemrograman Perangkat Lunak dan GIM (PPLG)-1', '0093222787', '2425.10001', '', '083162706670', '083110640474', '2009-07-08', 'KP. BALUBURSARI', 'Futsal'])
+            .$row(['2', 'MUH. AL-FATIH', '10-Teknik Jaringan Komputer dan Telekomunikasi (TJKT)-1', '', '2526.10002', '', '', '', '', '', ''])
+            .$row(['3', 'Siti Nur Aisyah', '10-Teknik Jaringan Komputer dan Telekomunikasi (TJKT)-1', '', '2526.10003', '', '', '', '2010-01-02', '', ''])
+            .'</table></body></html>';
+
+        $response = $this->actingAs($this->admin())->post(route('admin.students.import.store'), [
+            'file' => UploadedFile::fake()->createWithContent('exportdatasiswa_2026_2027.xls', $html),
+        ]);
+
+        $response->assertRedirect(route('admin.students.index'));
+        $response->assertSessionHas('success', fn (string $message) => str_contains($message, '3 siswa berhasil diimpor.') && str_contains($message, '1 kelas baru ikut dibuat: X Teknik Jaringan Komputer dan Telekomunikasi 1.'));
+
+        $afdil = StudentProfile::where('nis', '2425.10001')->firstOrFail();
+        $this->assertSame('Afdil Alfarizi Hidayat', $afdil->user->name);
+        $this->assertSame('2425.10001@'.StudentImportController::EMAIL_DOMAIN, $afdil->user->email);
+        $this->assertTrue(Hash::check('2425.10001', $afdil->user->password));
+        $this->assertSame('0093222787', $afdil->nisn);
+        $this->assertSame($existing->id, $afdil->class_id);
+        $this->assertSame('083162706670', $afdil->phone);
+        $this->assertSame('083110640474', $afdil->parent_phone);
+        $this->assertSame('2009-07-08', $afdil->birth_date->format('Y-m-d'));
+
+        $newClass = Classes::where('name', 'X Teknik Jaringan Komputer dan Telekomunikasi 1')->firstOrFail();
+        $this->assertSame(['X-TJKT-1', 'X', $existing->academic_year_id], [$newClass->code, $newClass->level, $newClass->academic_year_id]);
+        $this->assertSame(['Muh. Al-Fatih', 'Siti Nur Aisyah'], $newClass->students()->with('user')->orderBy('nis')->get()->pluck('user.name')->all());
+    }
+
+    public function test_school_export_classes_are_not_created_without_an_active_year(): void
+    {
+        $html = '<table><tr><th>Nama Siswa</th><th>NIS</th><th>Kelas</th></tr>'
+            .'<tr><td>Andi</td><td>2526.10009</td><td>11-Pemasaran (PM)-2</td></tr></table>';
+
+        $this->actingAs($this->admin())->post(route('admin.students.import.store'), [
+            'file' => UploadedFile::fake()->createWithContent('siswa.xls', $html),
+        ])->assertSessionHas('import_errors', ['Baris 2: Kelas 11-Pemasaran (PM)-2 tidak dapat dibuat karena belum ada tahun ajaran aktif.']);
+
+        $this->assertSame(0, Classes::count());
+        $this->assertSame(0, StudentProfile::count());
+    }
+
+    public function test_old_binary_xls_files_are_rejected(): void
+    {
+        $this->actingAs($this->admin())
+            ->from(route('admin.students.import'))
+            ->post(route('admin.students.import.store'), [
+                'file' => UploadedFile::fake()->createWithContent('siswa.xls', "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1".str_repeat("\0", 504)),
+            ])
+            ->assertRedirect(route('admin.students.import'));
 
         $this->assertSame(0, StudentProfile::count());
     }
