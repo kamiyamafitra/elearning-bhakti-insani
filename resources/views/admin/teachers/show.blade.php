@@ -63,7 +63,7 @@
                         <div class="fw-semibold">{{ $teacher->user->name }}</div>
                     </div>
                     <div class="col-md-6">
-                        <div class="text-muted small">Surel</div>
+                        <div class="text-muted small">Email</div>
                         <div class="fw-semibold">{{ $teacher->user->email }}</div>
                     </div>
                     <div class="col-md-6">

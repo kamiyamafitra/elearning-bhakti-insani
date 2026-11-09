@@ -24,7 +24,7 @@
                     <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" autocomplete="name" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="email">Surel</label>
+                    <label class="form-label" for="email">Email</label>
                     <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" autocomplete="email" required>
                 </div>
                 <div class="col-md-6">

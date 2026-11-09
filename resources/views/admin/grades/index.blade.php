@@ -91,6 +91,10 @@
                             @endif
                             <th scope="col" class="text-center">Rata-rata</th>
                             <th scope="col" class="text-center small">Tidak Mengumpulkan</th>
+                            @if ($selectedSubject)
+                                <th scope="col" class="text-center">Nilai Rapor</th>
+                                <th scope="col" class="text-center small">Predikat</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -135,6 +139,9 @@
                                         <span class="text-muted">0</span>
                                     @endif
                                 </td>
+                                @if ($selectedSubject)
+                                    @include('grades._report-cells', ['report' => $row['report']])
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
@@ -144,6 +151,10 @@
             <p class="small text-muted mb-0">
                 Rata-rata dihitung dalam skala 0–100 dari tugas yang sudah dinilai saja. Tugas yang tidak dikumpulkan setelah batas waktu
                 dihitung terpisah di kolom Tidak Mengumpulkan dan tidak dianggap bernilai 0.
+                @if ($selectedSubject)
+                    @php($setting = $selectedSubject['setting'])
+                    <br>Nilai Rapor memakai bobot guru (Tugas {{ $setting->assignment_weight }}% · Kuis {{ $setting->quiz_weight }}%, KKM {{ $setting->passing_score }}); di nilai rapor, tugas/kuis yang tidak dikerjakan dihitung 0.
+                @endif
                 @if ($selectedSubject && $selectedSubject['assignments']->isEmpty())
                     <br>Belum ada tugas yang diterbitkan untuk mata pelajaran ini.
                 @endif

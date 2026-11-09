@@ -157,6 +157,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/quizzes/{quiz}/questions/{question}', [TeacherQuizQuestionController::class, 'update'])->name('quizzes.questions.update');
         Route::delete('/quizzes/{quiz}/questions/{question}', [TeacherQuizQuestionController::class, 'destroy'])->name('quizzes.questions.destroy');
         Route::get('/grades', [TeacherGradeController::class, 'index'])->name('grades.index');
+        Route::get('/grades/{subject}/{class}', [TeacherGradeController::class, 'show'])->name('grades.show');
+        Route::put('/grades/{subject}/{class}', [TeacherGradeController::class, 'updateSettings'])->name('grades.settings');
+        Route::get('/grades/{subject}/{class}/export', [TeacherGradeController::class, 'export'])->name('grades.export');
         require __DIR__.'/discussions.php';
 
         Route::get('/announcements', [TeacherAnnouncementController::class, 'index'])->name('announcements.index');

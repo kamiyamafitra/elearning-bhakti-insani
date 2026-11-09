@@ -136,12 +136,15 @@ class GradeRecapTest extends TestCase
 
         $sheets = $this->readSheets($response->getFile()->getPathname());
 
-        $this->assertSame(['Ringkasan', 'Basis Data', 'Jaringan Dasar'], array_keys($sheets));
+        $this->assertSame(['Ringkasan', 'Nilai Rapor', 'Basis Data', 'Jaringan Dasar'], array_keys($sheets));
         $this->assertSame(['No', 'NIS', 'Nama Siswa', 'Basis Data', 'Jaringan Dasar', 'Rata-rata', 'Tidak Mengumpulkan'], $sheets['Ringkasan'][1]);
         $this->assertSame([1, '24001', 'Andi Saputra', '-', 85, 85, 0], $sheets['Ringkasan'][2]);
+        $this->assertSame(['No', 'NIS', 'Nama Siswa', 'Basis Data', 'Jaringan Dasar', 'Mapel Belum Tuntas'], $sheets['Nilai Rapor'][1]);
+        $this->assertSame([1, '24001', 'Andi Saputra', '-', '85,0 (B)', 0], $sheets['Nilai Rapor'][2]);
+        $this->assertSame([2, '24002', 'Bunga Lestari', '-', '0,0 (D)', 1], $sheets['Nilai Rapor'][3]);
         $this->assertSame([2, '24002', 'Bunga Lestari', 'Tidak mengumpulkan', '-', 1], [
-            $sheets['Jaringan Dasar'][2][0], $sheets['Jaringan Dasar'][2][1], $sheets['Jaringan Dasar'][2][2],
-            $sheets['Jaringan Dasar'][2][3], $sheets['Jaringan Dasar'][2][4], $sheets['Jaringan Dasar'][2][5],
+            $sheets['Jaringan Dasar'][3][0], $sheets['Jaringan Dasar'][3][1], $sheets['Jaringan Dasar'][3][2],
+            $sheets['Jaringan Dasar'][3][3], $sheets['Jaringan Dasar'][3][4], $sheets['Jaringan Dasar'][3][5],
         ]);
     }
 
@@ -157,12 +160,13 @@ class GradeRecapTest extends TestCase
         $summarySheet = $zip->getFromName('xl/worksheets/sheet1.xml');
         $zip->close();
 
-        foreach (['1E40AF', '2563EB', 'FEE2E2'] as $color) {
+        foreach (['3730A3', 'E0E7FF', 'FEE2E2'] as $color) {
             $this->assertStringContainsString($color, $styles);
         }
 
         $this->assertStringContainsString('<mergeCell ref="A1:F1"/>', $summarySheet);
         $this->assertStringContainsString('ySplit="2"', $summarySheet);
+        $this->assertStringContainsString('<autoFilter ref="A2:F', $summarySheet);
         $this->assertStringContainsString('<cols>', $summarySheet);
     }
 

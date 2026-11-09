@@ -57,7 +57,7 @@ class TeacherReportController extends Controller
         $writer->getCurrentSheet()->setName('Ringkasan');
         $this->layoutSheet($writer->getCurrentSheet(), [30, 22, 12, 12, 12, 12, 14, 12, 20], 3);
         $this->addTitleRow($writer, 'Laporan Aktivitas Guru - '.$this->periodLabel($filters), 9);
-        $writer->addRow($this->textRow([]));
+        $this->addNoteRow($writer, 'Diunduh pada '.now()->format('d-m-Y H:i'), 9);
         $writer->addRow($this->headerRow(['Guru', 'NIP', 'Kelas & Mapel', 'Materi', 'Materi Terbit', 'Tugas', 'Pengumpulan', 'Sudah Dinilai', 'Aktivitas Terakhir']));
 
         foreach ($teachers->values() as $index => $teacher) {
@@ -73,6 +73,8 @@ class TeacherReportController extends Controller
                 $teacher['last_activity']?->format('d-m-Y H:i') ?? '-',
             ], $index));
         }
+
+        $this->addFilter($writer, 3, 9);
 
         $sheet = $writer->addNewSheetAndMakeItCurrent()->setName('Rincian');
         $this->layoutSheet($sheet, [30, 22, 16, 26, 12, 12, 12, 14, 12, 20], 1);
@@ -95,6 +97,8 @@ class TeacherReportController extends Controller
                 ], $detailRowIndex++));
             }
         }
+
+        $this->addFilter($writer, 1, 10);
 
         $writer->close();
 

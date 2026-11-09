@@ -17,7 +17,7 @@
         </div>
     </div>
     <a href="{{ route('student.subjects.index') }}" class="btn btn-light">
-        <i class="bi bi-journal-code me-1" aria-hidden="true"></i> Lihat Kursus Saya
+        <i class="bi bi-journal-code me-1" aria-hidden="true"></i> Lihat Mapel Saya
     </a>
 </div>
 

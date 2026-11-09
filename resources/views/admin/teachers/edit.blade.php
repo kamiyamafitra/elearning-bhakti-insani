@@ -28,7 +28,7 @@
                     @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="email">Surel</label>
+                    <label class="form-label" for="email">Email</label>
                     <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $teacher->user->email) }}" autocomplete="email" required>
                     @error('email')
                         <div class="invalid-feedback">{{ $message }}</div>

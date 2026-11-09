@@ -19,6 +19,7 @@ use OpenSpout\Reader\CSV\Options as CsvOptions;
 use OpenSpout\Reader\CSV\Reader as CsvReader;
 use OpenSpout\Reader\XLSX\Options as XlsxOptions;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
+use OpenSpout\Writer\XLSX\Entity\SheetView;
 use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
@@ -365,7 +366,14 @@ trait ImportsSpreadsheetRows
 
         $writer = new XlsxWriter;
         $writer->openToFile($path);
-        $writer->addRow(Row::fromValuesWithStyle($columns, $textStyle->withFontBold(true)->withFontColor('FFFFFF')->withBackgroundColor('2563EB')));
+        // Same soft indigo header as the exported reports; the header stays visible while scrolling.
+        $sheet = $writer->getCurrentSheet();
+        foreach (array_keys($columns) as $index) {
+            $sheet->setColumnWidth(22, $index + 1);
+        }
+        $sheet->setSheetView((new SheetView)->withFreezeRow(2));
+
+        $writer->addRow(Row::fromValuesWithStyle($columns, $textStyle->withFontBold(true)->withFontColor('1E1B4B')->withBackgroundColor('E0E7FF'))->withHeight(28));
 
         foreach ($exampleRows as $exampleRow) {
             $writer->addRow(Row::fromValuesWithStyle($exampleRow, $textStyle));

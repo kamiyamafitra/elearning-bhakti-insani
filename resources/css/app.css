@@ -3596,6 +3596,70 @@ a.card:hover,
     backdrop-filter: blur(6px);
 }
 
+/* Report card: letter grades, the KKM-based scale and the student's per-subject summary. */
+.predicate-badge {
+    min-width: 2rem;
+    padding: 0.4em 0.7em;
+    font-size: 0.8rem;
+}
+
+.predicate-badge--a {
+    background: var(--ui-success-soft);
+    color: var(--ui-success);
+}
+
+.predicate-badge--b {
+    background: var(--ui-primary-soft);
+    color: var(--ui-primary-text);
+}
+
+.predicate-badge--c {
+    background: var(--ui-warning-soft);
+    color: var(--ui-warning);
+}
+
+.predicate-badge--d {
+    background: var(--ui-danger-soft);
+    color: var(--ui-danger);
+}
+
+.predicate-scale {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--ui-border);
+    color: var(--ui-muted);
+    font-size: 0.85rem;
+}
+
+.report-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 2rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--ui-radius);
+    background: var(--ui-gradient-soft);
+}
+
+.report-summary__label {
+    margin-bottom: 0.2rem;
+    color: var(--ui-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.report-summary__value {
+    color: var(--ui-primary-text);
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+}
+
 /* Tables ----------------------------------------------------------------- */
 
 .table {
