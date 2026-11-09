@@ -3205,10 +3205,41 @@ h1, h2, h3, h4, h5, h6,
     color: var(--ui-border-strong);
 }
 
-/* Collapsed sidebar (desktop only): icons with tooltips. */
+/* Desktop sidebar scrollbar stays out of sight until the pointer is over the menu. */
+@media (min-width: 992px) {
+    .app-sidebar {
+        scrollbar-color: transparent transparent;
+        scrollbar-gutter: auto;
+    }
+
+    .app-sidebar:hover {
+        scrollbar-color: var(--ui-border-strong) transparent;
+    }
+}
+
+/* Collapsed sidebar (desktop only): centred icon buttons with tooltips. */
 @media (min-width: 992px) {
     [data-sidebar="collapsed"] .app-sidebar {
         --sidebar-width: 78px;
+        --sidebar-icon-size: 44px;
+        /* Space between the icon and the sidebar edge (the 1px is the right border). */
+        --sidebar-icon-inset: calc((var(--sidebar-width) - 1px - var(--sidebar-icon-size)) / 2);
+        scrollbar-width: none;
+    }
+
+    [data-sidebar="collapsed"] .app-sidebar::-webkit-scrollbar {
+        display: none;
+    }
+
+    [data-sidebar="collapsed"] .app-sidebar__nav {
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    [data-sidebar="collapsed"] .app-sidebar .nav {
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 4px;
     }
 
     [data-sidebar="collapsed"] .app-sidebar__brand {
@@ -3224,8 +3255,9 @@ h1, h2, h3, h4, h5, h6,
     }
 
     [data-sidebar="collapsed"] .app-sidebar .nav-section {
+        align-self: stretch;
         height: 1px;
-        margin: 0.75rem 0.6rem;
+        margin: 0.6rem 0.35rem;
         overflow: hidden;
         background: var(--ui-border);
         color: transparent;
@@ -3235,9 +3267,21 @@ h1, h2, h3, h4, h5, h6,
         display: none;
     }
 
+    [data-sidebar="collapsed"] .app-sidebar .nav-item {
+        width: var(--sidebar-icon-size);
+    }
+
     [data-sidebar="collapsed"] .app-sidebar .nav-link {
         justify-content: center;
-        padding: 0.7rem 0;
+        width: var(--sidebar-icon-size);
+        height: var(--sidebar-icon-size);
+        padding: 0;
+        gap: 0;
+    }
+
+    /* The active marker sits on the sidebar's left edge, as in the wide sidebar. */
+    [data-sidebar="collapsed"] .app-sidebar .nav-link.active::before {
+        left: calc(var(--sidebar-icon-inset) * -1);
     }
 
     [data-sidebar="collapsed"] .app-sidebar .nav-link i {
