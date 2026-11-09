@@ -25,7 +25,5 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
-
-# Local-only settings
 .env.local
 /.claude/
