@@ -3918,6 +3918,43 @@ a.card:hover,
     border-color: var(--ui-primary-border);
 }
 
+/* Bootstrap's info (cyan) and warning (yellow) are too pale to read as text on white,
+   so text uses deeper shades in light mode and the bright ones in dark mode. */
+:root,
+[data-bs-theme="light"] {
+    --ui-info: #0E7490;
+    --ui-info-soft: #ECFEFF;
+}
+
+[data-bs-theme="dark"] {
+    --ui-info: #67E8F9;
+    --ui-info-soft: #0B2A33;
+}
+
+.text-warning {
+    color: var(--ui-warning) !important;
+}
+
+.text-info {
+    color: var(--ui-info) !important;
+}
+
+.btn-outline-info {
+    --bs-btn-color: var(--ui-info);
+    --bs-btn-border-color: var(--ui-info);
+    --bs-btn-hover-color: var(--ui-surface);
+    --bs-btn-hover-bg: var(--ui-info);
+    --bs-btn-hover-border-color: var(--ui-info);
+    --bs-btn-active-color: var(--ui-surface);
+    --bs-btn-active-bg: var(--ui-info);
+    --bs-btn-active-border-color: var(--ui-info);
+}
+
+.badge.text-bg-info {
+    background: var(--ui-info-soft) !important;
+    color: var(--ui-info) !important;
+}
+
 /* Thin, quiet scrollbars */
 * {
     scrollbar-width: thin;

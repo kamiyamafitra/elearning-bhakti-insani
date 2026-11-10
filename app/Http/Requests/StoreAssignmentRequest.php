@@ -23,11 +23,23 @@ class StoreAssignmentRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'instructions' => ['required', 'string', 'max:20000'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,zip,odt,ods,odp', 'max:20480'],
-            'due_at' => ['required', 'date'],
+            // A new assignment needs a deadline in the future; one already past would count every student as
+            // "Tidak mengumpulkan" (0 on the report card) before anyone could hand it in.
+            'due_at' => ['required', 'date', 'after:now'],
             'max_score' => ['required', 'integer', 'min:1', 'max:1000'],
             'status' => ['required', Rule::in([Assignment::STATUS_DRAFT, Assignment::STATUS_PUBLISHED])],
             'allows_text_response' => ['nullable', 'boolean'],
             'allows_resubmission' => ['nullable', 'boolean'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'due_at.after' => 'Batas pengumpulan harus setelah waktu sekarang.',
         ];
     }
 }

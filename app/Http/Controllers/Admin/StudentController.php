@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\ChoosesPageSize;
 use App\Http\Controllers\Controller;
+use App\Models\AssignmentSubmission;
 use App\Models\Classes;
 use App\Models\ClassMembership;
 use App\Models\StudentProfile;
@@ -13,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -174,6 +176,9 @@ class StudentController extends Controller
 
     public function destroy(StudentProfile $student): RedirectResponse
     {
+        // The database removes the student's submissions with the account, but not the uploaded files, so delete those too.
+        $submissionFiles = AssignmentSubmission::where('student_id', $student->user_id)->whereNotNull('file_path')->pluck('file_path')->all();
+
         DB::transaction(function () use ($student) {
             $user = $student->user;
             ClassMembership::where('student_id', $student->user_id)->delete();
@@ -182,6 +187,8 @@ class StudentController extends Controller
                 $user->delete();
             }
         });
+
+        Storage::disk('local')->delete($submissionFiles);
 
         return redirect()->route('admin.students.index')->with('success', 'Data siswa berhasil dihapus.');
     }
