@@ -7,12 +7,15 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\Feature\Concerns\CreatesAcademicData;
+use Tests\Feature\Concerns\ReadsCredentialSlips;
 use Tests\TestCase;
 
 class TeacherImportTest extends TestCase
 {
     use CreatesAcademicData;
+    use ReadsCredentialSlips;
     use RefreshDatabase;
 
     public function test_guests_are_redirected_and_non_admins_are_forbidden(): void
@@ -41,7 +44,14 @@ class TeacherImportTest extends TestCase
             ->assertDownload('template-impor-guru.xlsx');
     }
 
-    public function test_csv_import_creates_teachers_with_generated_email_and_nip_password(): void
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Storage::fake('local');
+    }
+
+    public function test_csv_import_creates_teachers_with_generated_email_and_random_temporary_password(): void
     {
         $csv = implode("\n", [
             'Nama Lengkap,NIP,Email,No HP,Alamat',
@@ -58,7 +68,8 @@ class TeacherImportTest extends TestCase
 
         $budi = User::where('email', '198001012005011001@guru.smkbhaktiinsani.sch.id')->firstOrFail();
         $this->assertSame('teacher', $budi->role);
-        $this->assertTrue(Hash::check('198001012005011001', $budi->password));
+        $this->assertTrue(Hash::check($this->slipPasswords()['198001012005011001'], $budi->password));
+        $this->assertFalse(Hash::check('198001012005011001', $budi->password), 'The NIP must not be the password.');
         $this->assertDatabaseHas('teacher_profiles', [
             'user_id' => $budi->id,
             'nip' => '198001012005011001',

@@ -88,13 +88,13 @@ class TeacherEditTest extends TestCase
         $response = $this->actingAs($this->admin())->put(route('admin.teachers.update', $teacher), [
             'name' => $teacher->user->name,
             'email' => $teacher->user->email,
-            'password' => 'kata-sandi-baru',
-            'password_confirmation' => 'kata-sandi-baru',
+            'password' => 'kata-sandi-baru1',
+            'password_confirmation' => 'kata-sandi-baru1',
         ]);
 
         $response->assertRedirect(route('admin.teachers.index'));
         $response->assertSessionHasNoErrors();
-        $this->assertTrue(Hash::check('kata-sandi-baru', $teacher->user->fresh()->password));
+        $this->assertTrue(Hash::check('kata-sandi-baru1', $teacher->user->fresh()->password));
     }
 
     public function test_update_validation_errors_are_displayed_and_old_values_are_kept(): void

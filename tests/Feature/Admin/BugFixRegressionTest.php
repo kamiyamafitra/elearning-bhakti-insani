@@ -8,16 +8,19 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Reader\XLSX\Reader;
 use OpenSpout\Writer\XLSX\Writer;
 use Tests\Feature\Concerns\CreatesAcademicData;
+use Tests\Feature\Concerns\ReadsCredentialSlips;
 use Tests\TestCase;
 use ZipArchive;
 
 class BugFixRegressionTest extends TestCase
 {
     use CreatesAcademicData;
+    use ReadsCredentialSlips;
     use RefreshDatabase;
 
     public function test_promoted_student_can_be_deleted(): void
@@ -140,12 +143,18 @@ class BugFixRegressionTest extends TestCase
 
     public function test_imported_accounts_can_sign_in_with_their_initial_password(): void
     {
+        Storage::fake('local');
+
         $this->actingAs($this->admin())->post(route('admin.teachers.import.store'), [
             'file' => UploadedFile::fake()->createWithContent('guru.csv', "nama,nip\nBudi,198001012005011001"),
         ]);
+        $password = $this->slipPasswords()['198001012005011001'];
         auth()->logout();
 
         $this->post(route('login'), ['username' => '198001012005011001', 'password' => '198001012005011001'])
+            ->assertSessionHasErrors('username');
+
+        $this->post(route('login'), ['username' => '198001012005011001', 'password' => $password])
             ->assertRedirect(route('teacher.dashboard'));
     }
 

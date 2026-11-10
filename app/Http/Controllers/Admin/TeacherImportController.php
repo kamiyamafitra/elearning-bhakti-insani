@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\TeacherProfile;
 use App\Models\User;
+use App\Support\CredentialSlip;
+use App\Support\TemporaryPassword;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -92,7 +94,8 @@ class TeacherImportController extends Controller
         }
 
         set_time_limit(300);
-        $passwords = $this->hashInitialPasswords(array_column($teachers, 'nip'));
+        $plainPasswords = TemporaryPassword::many(count($teachers));
+        $passwords = $this->hashInitialPasswords($plainPasswords);
 
         ActivityLog::withoutLogging(fn () => DB::transaction(function () use ($teachers, $passwords): void {
             foreach ($teachers as $index => $teacher) {
@@ -116,8 +119,19 @@ class TeacherImportController extends Controller
 
         ActivityLog::record(ActivityLog::ACTION_BULK, 'mengimpor '.count($teachers).' guru dari file', properties: ['count' => count($teachers), 'nip' => array_column($teachers, 'nip')]);
 
+        $slipRows = array_map(fn (array $teacher, string $password) => [
+            'name' => $teacher['name'],
+            'identifier' => (string) $teacher['nip'],
+            'group' => 'Guru',
+            'password' => $password,
+        ], array_values($teachers), $plainPasswords);
+
         return redirect()->route('admin.teachers.index')
-            ->with('success', count($teachers).' guru berhasil diimpor. Password awal setiap guru adalah NIP masing-masing.');
+            ->with('success', count($teachers).' guru berhasil diimpor. Setiap guru mendapat password sementara acak; unduh slip password untuk dibagikan.')
+            ->with('credential_slip', [
+                'id' => CredentialSlip::store('Impor Guru '.now()->format('d-m-Y H.i'), 'NIP', $slipRows),
+                'count' => count($slipRows),
+            ]);
     }
 
     /**

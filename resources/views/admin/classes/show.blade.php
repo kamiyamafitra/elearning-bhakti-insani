@@ -28,7 +28,7 @@
                     <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Tetapkan Siswa
                 </a>
                 @if ($class->students->isNotEmpty())
-                    <form method="POST" action="{{ route('admin.classes.reset-passwords', $class) }}" onsubmit="return confirm('Reset password semua siswa {{ addslashes($class->name) }} menjadi NIS masing-masing? Siswa wajib membuat password baru saat masuk.');">
+                    <form method="POST" action="{{ route('admin.classes.reset-passwords', $class) }}" onsubmit="return confirm('Reset password semua siswa {{ addslashes($class->name) }} dengan password sementara acak? Slip password bisa diunduh setelahnya, dan siswa wajib membuat password baru saat masuk.');">
                         @csrf
                         <button type="submit" class="btn btn-outline-danger w-100">
                             <i class="bi bi-key me-1" aria-hidden="true"></i> Reset Password Semua Siswa

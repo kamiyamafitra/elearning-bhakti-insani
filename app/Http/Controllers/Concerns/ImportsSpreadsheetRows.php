@@ -323,14 +323,17 @@ trait ImportsSpreadsheetRows
     }
 
     /**
-     * @param  list<string>  $identifiers
+     * Hash the random temporary passwords of a whole import. A lower bcrypt cost keeps large imports fast;
+     * that is acceptable because these passwords are random and must be replaced at the first sign-in.
+     *
+     * @param  list<string>  $passwords
      * @return list<string>
      */
-    protected function hashInitialPasswords(array $identifiers): array
+    protected function hashInitialPasswords(array $passwords): array
     {
         $rounds = min($this->importHashRounds, (int) config('hashing.bcrypt.rounds'));
 
-        return array_map(fn (string $identifier) => Hash::make($identifier, ['rounds' => $rounds]), $identifiers);
+        return array_map(fn (string $password) => Hash::make($password, ['rounds' => $rounds]), $passwords);
     }
 
     /**

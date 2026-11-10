@@ -54,8 +54,8 @@ class ForcedPasswordChangeTest extends TestCase
 
         $response = $this->actingAs($student)->put(route('password.update'), [
             'current_password' => '24001',
-            'password' => 'rahasia-baru',
-            'password_confirmation' => 'rahasia-baru',
+            'password' => 'rahasia-baru-1',
+            'password_confirmation' => 'rahasia-baru-1',
         ]);
 
         $response->assertRedirect(route('student.dashboard'));

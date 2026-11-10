@@ -29,6 +29,14 @@ class LoginController extends Controller
     private const THROTTLE_DECAY_SECONDS = 60;
 
     /**
+     * Failed logins allowed from one IP address, across all accounts, before that address is paused.
+     * Generous because a whole school often shares one public IP; it stops one machine guessing many accounts.
+     */
+    private const MAX_FAILED_LOGINS_PER_IP = 60;
+
+    private const IP_THROTTLE_DECAY_SECONDS = 600;
+
+    /**
      * The number of failed logins recorded per IP address each minute.
      */
     private const MAX_LOGGED_FAILURES_PER_MINUTE = 20;
@@ -63,6 +71,14 @@ class LoginController extends Controller
         $identifier = trim($validated['username']);
         $password = $validated['password'];
         $throttleKey = $this->throttleKey($identifier, $request);
+        $ipThrottleKey = 'login-ip|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($ipThrottleKey, self::MAX_FAILED_LOGINS_PER_IP)) {
+            return $this->loginError(
+                'Terlalu banyak percobaan masuk yang gagal dari jaringan ini. Silakan coba lagi dalam '
+                    .ceil(RateLimiter::availableIn($ipThrottleKey) / 60).' menit.',
+            );
+        }
 
         if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_LOGIN_ATTEMPTS)) {
             return $this->loginError(
@@ -73,18 +89,25 @@ class LoginController extends Controller
 
         $candidates = $this->candidateUsers($identifier);
 
+        // Check a dummy hash for unknown usernames so the response time doesn't reveal which accounts exist.
+        if ($candidates->isEmpty()) {
+            Hash::check($password, self::dummyHash());
+        }
+
         $matchingUsers = $candidates->filter(
             fn (User $user): bool => Hash::check($password, $user->password),
         );
 
         if ($matchingUsers->isEmpty()) {
             RateLimiter::hit($throttleKey, self::THROTTLE_DECAY_SECONDS);
+            RateLimiter::hit($ipThrottleKey, self::IP_THROTTLE_DECAY_SECONDS);
 
             return $this->failedLogin('Username dan kata sandi tidak sesuai.', $candidates->isNotEmpty());
         }
 
         if ($matchingUsers->count() > 1) {
             RateLimiter::hit($throttleKey, self::THROTTLE_DECAY_SECONDS);
+            RateLimiter::hit($ipThrottleKey, self::IP_THROTTLE_DECAY_SECONDS);
 
             return $this->failedLogin(
                 'Identitas ini cocok dengan lebih dari satu akun. Silakan hubungi administrator.',
@@ -207,6 +230,15 @@ class LoginController extends Controller
             'admin' => 'admin.dashboard',
             default => 'student.dashboard',
         };
+    }
+
+    /**
+     * A fixed bcrypt hash of a random, discarded value, at the same cost (12) as real passwords,
+     * so checking it takes as long as checking a real account. It matches no password.
+     */
+    private static function dummyHash(): string
+    {
+        return '$2y$12$1FdxJfC6W3FBvMeD/kEteu59vSoov7mzzBi8YIpeIDgPeU9KunGxa';
     }
 
     private function throttleKey(string $identifier, Request $request): string

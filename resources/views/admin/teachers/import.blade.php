@@ -20,7 +20,7 @@
             'Jika ada satu baris yang salah, tidak ada data yang disimpan. Perbaiki semua kesalahan yang ditampilkan lalu unggah ulang.',
             'NIP dan email tidak boleh sama dengan data yang sudah terdaftar atau dengan baris lain di file.',
             'Format kolom NIP sebagai Teks di Excel agar angka panjang tidak berubah menjadi format ilmiah (1,98E+17). Template sudah diatur seperti itu.',
-            'Guru masuk menggunakan NIP dengan password NIP, lalu wajib membuat password baru saat pertama kali masuk.',
+            'Setiap guru mendapat password sementara acak. Setelah impor, unduh slip password (sekali unduh) untuk dibagikan; guru masuk dengan NIP lalu wajib membuat password baru.',
         ],
     ])
 @endsection

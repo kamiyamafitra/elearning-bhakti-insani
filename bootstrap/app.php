@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,6 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'password.changed' => EnsurePasswordIsChanged::class,
         ]);
+
+        $middleware->append(SecurityHeaders::class);
+
+        // Only answer for the host in APP_URL (and its subdomains), so a forged Host header can't redirect users elsewhere.
+        // Laravel skips this check in the local environment and in tests.
+        $middleware->trustHosts();
 
         $middleware->redirectGuestsTo(fn () => route('login'));
 

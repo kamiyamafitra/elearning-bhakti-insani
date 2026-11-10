@@ -42,13 +42,36 @@ class PasswordUpdateTest extends TestCase
             ->from(route('student.profile.edit'))
             ->put(route('password.update'), [
                 'current_password' => '24001',
-                'password' => 'rahasia-baru',
-                'password_confirmation' => 'rahasia-baru',
+                'password' => 'rahasia-baru-1',
+                'password_confirmation' => 'rahasia-baru-1',
             ]);
 
         $response->assertRedirect(route('student.profile.edit'));
         $response->assertSessionHas('success', 'Password berhasil diperbarui.');
-        $this->assertTrue(Hash::check('rahasia-baru', $student->fresh()->password));
+        $this->assertTrue(Hash::check('rahasia-baru-1', $student->fresh()->password));
+    }
+
+    public function test_changing_the_password_signs_out_other_devices_but_not_this_one(): void
+    {
+        $student = $this->makeStudent($this->makeClass(), 'Andi', '24001');
+        $student->update(['password' => Hash::make('lama-sandi-1')]);
+        $oldHash = $student->fresh()->password;
+
+        $this->actingAs($student)->put(route('password.update'), [
+            'current_password' => 'lama-sandi-1',
+            'password' => 'rahasia-baru-1',
+            'password_confirmation' => 'rahasia-baru-1',
+        ]);
+
+        // This browser keeps working after the change.
+        $this->get(route('student.dashboard'))->assertOk();
+
+        // Another browser that signed in with the old password is signed out on its next request.
+        $this->flushSession();
+        $this->actingAs($student->fresh())
+            ->withSession(['password_hash_web' => $oldHash])
+            ->get(route('student.dashboard'))
+            ->assertRedirect(route('login'));
     }
 
     public function test_new_password_can_be_used_to_log_in(): void
@@ -93,7 +116,11 @@ class PasswordUpdateTest extends TestCase
 
         $this->actingAs($user)
             ->put(route('password.update'), ['current_password' => 'lama-123', 'password' => '12345', 'password_confirmation' => '12345'])
-            ->assertSessionHasErrorsIn('updatePassword', ['password' => 'Password baru minimal 6 karakter.']);
+            ->assertSessionHasErrorsIn('updatePassword', ['password' => 'Password minimal 8 karakter.']);
+
+        $this->actingAs($user)
+            ->put(route('password.update'), ['current_password' => 'lama-123', 'password' => 'hanyahurufsaja', 'password_confirmation' => 'hanyahurufsaja'])
+            ->assertSessionHasErrorsIn('updatePassword', ['password' => 'Password harus berisi huruf dan angka.']);
 
         $this->actingAs($user)
             ->put(route('password.update'), ['current_password' => 'lama-123', 'password' => 'lama-123', 'password_confirmation' => 'lama-123'])

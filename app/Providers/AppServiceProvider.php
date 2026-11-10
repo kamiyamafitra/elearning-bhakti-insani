@@ -10,6 +10,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,6 +29,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // On the live https site every generated link and redirect stays on https.
+        if ($this->app->isProduction() && str_starts_with((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
         Event::listen(function (Login $event): void {
             if ($event->user instanceof User) {
                 ActivityLog::record(ActivityLog::ACTION_LOGIN, 'masuk ke aplikasi', user: $event->user);

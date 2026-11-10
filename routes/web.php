@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\ClassCopyController;
+use App\Http\Controllers\Admin\CredentialSlipController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GradeRecapController;
 use App\Http\Controllers\Admin\PasswordResetController;
@@ -70,7 +71,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
 });
 
-Route::middleware('auth')->group(function () {
+// auth.session signs a browser out once the account's password changes elsewhere (password change or admin reset).
+Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('/password', [PasswordController::class, 'update'])->name('password.update');
@@ -89,6 +91,7 @@ Route::middleware('auth')->group(function () {
         Route::post('teachers/{teacher}/reset-password', [PasswordResetController::class, 'teacher'])->name('teachers.reset-password');
         Route::patch('teachers/{teacher}/toggle-active', [AccountStatusController::class, 'teacher'])->name('teachers.toggle-active');
         Route::post('classes/{class}/reset-passwords', [PasswordResetController::class, 'classStudents'])->name('classes.reset-passwords');
+        Route::get('credential-slips/{slip}', [CredentialSlipController::class, 'download'])->whereUuid('slip')->name('credential-slips.download');
         Route::get('teachers/import', [TeacherImportController::class, 'create'])->name('teachers.import');
         Route::post('teachers/import', [TeacherImportController::class, 'store'])->name('teachers.import.store');
         Route::get('teachers/import/template', [TeacherImportController::class, 'template'])->name('teachers.import.template');

@@ -8,6 +8,7 @@ use App\Models\Classes;
 use App\Models\ClassMembership;
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Support\PasswordRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -75,7 +76,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required', ...PasswordRules::rules(), 'confirmed'],
             'nisn' => ['nullable', 'string', 'max:20', 'unique:student_profiles,nisn'],
             'nis' => ['nullable', 'string', 'max:20', 'unique:student_profiles,nis'],
             'class_id' => ['nullable', 'exists:classes,id'],
@@ -85,7 +86,7 @@ class StudentController extends Controller
             'address' => ['nullable', 'string'],
             'parent_name' => ['nullable', 'string', 'max:255'],
             'parent_phone' => ['nullable', 'string', 'max:20'],
-        ]);
+        ], PasswordRules::messages());
 
         DB::transaction(function () use ($validated) {
             $user = User::create([
@@ -133,7 +134,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($student->user_id)],
-            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
+            'password' => ['nullable', ...PasswordRules::rules(), 'confirmed'],
             'nisn' => ['nullable', 'string', 'max:20', Rule::unique('student_profiles', 'nisn')->ignore($student->id)],
             'nis' => ['nullable', 'string', 'max:20', Rule::unique('student_profiles', 'nis')->ignore($student->id)],
             'class_id' => ['nullable', 'exists:classes,id'],
@@ -143,7 +144,7 @@ class StudentController extends Controller
             'address' => ['nullable', 'string'],
             'parent_name' => ['nullable', 'string', 'max:255'],
             'parent_phone' => ['nullable', 'string', 'max:20'],
-        ]);
+        ], PasswordRules::messages());
 
         DB::transaction(function () use ($validated, $student) {
             $userData = [

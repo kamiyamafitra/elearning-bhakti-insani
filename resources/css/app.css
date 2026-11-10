@@ -2794,7 +2794,8 @@ small,
 .file-preview__text {
     margin: 0;
     padding: 1rem;
-    background: #FFFFFF;
+    background: var(--ui-surface);
+    color: var(--ui-text);
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-sm);
     font-size: 0.9rem;
@@ -2829,7 +2830,8 @@ small,
 
 .file-preview__tabs .btn {
     flex: 0 0 auto;
-    background: #FFFFFF;
+    background: var(--ui-surface);
+    color: var(--ui-text-secondary);
     border: 1px solid var(--ui-border);
 }
 
@@ -2842,7 +2844,8 @@ small,
 .file-preview__sheet {
     max-height: 70vh;
     overflow: auto;
-    background: #FFFFFF;
+    background: var(--ui-surface);
+    color: var(--ui-text);
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-sm);
 }

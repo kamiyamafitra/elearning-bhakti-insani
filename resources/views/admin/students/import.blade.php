@@ -28,7 +28,7 @@
             'Jika ada satu baris yang salah, tidak ada data yang disimpan. Perbaiki semua kesalahan yang ditampilkan lalu unggah ulang.',
             'NIS, NISN, dan email tidak boleh sama dengan data yang sudah terdaftar atau dengan baris lain di file.',
             'Format kolom NIS dan NISN sebagai Teks di Excel agar angka 0 di depan tidak hilang. Template sudah diatur seperti itu.',
-            'Siswa masuk menggunakan NIS dengan password NIS, lalu wajib membuat password baru saat pertama kali masuk.',
+            'Setiap siswa mendapat password sementara acak. Setelah impor, unduh slip password (sekali unduh) untuk dibagikan; siswa masuk dengan NIS lalu wajib membuat password baru.',
         ],
     ])
 @endsection

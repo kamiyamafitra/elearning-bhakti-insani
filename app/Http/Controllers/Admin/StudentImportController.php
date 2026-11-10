@@ -9,6 +9,8 @@ use App\Models\ActivityLog;
 use App\Models\Classes;
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Support\CredentialSlip;
+use App\Support\TemporaryPassword;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -135,10 +137,13 @@ class StudentImportController extends Controller
         }
 
         set_time_limit(300);
-        $passwords = $this->hashInitialPasswords(array_column($students, 'nis'));
+        $plainPasswords = TemporaryPassword::many(count($students));
+        $passwords = $this->hashInitialPasswords($plainPasswords);
+        $classNames = Classes::whereIn('id', array_filter(array_column($students, 'class_id')))->pluck('name', 'id');
 
-        ActivityLog::withoutLogging(fn () => DB::transaction(function () use ($students, $passwords, $newClasses, $activeYear): void {
+        $slipRows = ActivityLog::withoutLogging(fn () => DB::transaction(function () use ($students, $passwords, $plainPasswords, $newClasses, $activeYear, $classNames): array {
             $createdClassIds = [];
+            $slipRows = [];
 
             foreach ($newClasses as $code => $class) {
                 $createdClassIds[$code] = Classes::create([
@@ -167,7 +172,18 @@ class StudentImportController extends Controller
                     'user_id' => $user->id,
                     ...Arr::except($student, ['name', 'email', 'new_class_code']),
                 ]);
+
+                $slipRows[] = [
+                    'name' => $student['name'],
+                    'identifier' => (string) $student['nis'],
+                    'group' => $student['new_class_code'] !== null
+                        ? $newClasses[$student['new_class_code']]['name']
+                        : (string) ($classNames[$student['class_id']] ?? '-'),
+                    'password' => $plainPasswords[$index],
+                ];
             }
+
+            return $slipRows;
         }));
 
         ActivityLog::record(ActivityLog::ACTION_BULK, 'mengimpor '.count($students).' siswa dari file', properties: ['count' => count($students), 'nis' => array_column($students, 'nis')]);
@@ -175,7 +191,11 @@ class StudentImportController extends Controller
         $createdClasses = $newClasses !== [] ? ' '.count($newClasses).' kelas baru ikut dibuat: '.implode(', ', array_column($newClasses, 'name')).'.' : '';
 
         return redirect()->route('admin.students.index')
-            ->with('success', count($students).' siswa berhasil diimpor. Password awal setiap siswa adalah NIS masing-masing.'.$createdClasses);
+            ->with('success', count($students).' siswa berhasil diimpor. Setiap siswa mendapat password sementara acak; unduh slip password untuk dibagikan.'.$createdClasses)
+            ->with('credential_slip', [
+                'id' => CredentialSlip::store('Impor Siswa '.now()->format('d-m-Y H.i'), 'NIS', $slipRows),
+                'count' => count($slipRows),
+            ]);
     }
 
     /**

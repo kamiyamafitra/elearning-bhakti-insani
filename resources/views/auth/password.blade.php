@@ -11,7 +11,7 @@
             <div class="alert alert-warning" role="alert">
                 <i class="bi bi-shield-exclamation me-1" aria-hidden="true"></i>
                 Password Anda baru saja diatur ulang oleh administrator. Buat password baru sebelum melanjutkan.
-                Password saat ini adalah NIS atau NIP Anda.
+                Password saat ini adalah password sementara yang diberikan administrator.
             </div>
         @endif
 

@@ -10,6 +10,7 @@ use App\Models\Quiz;
 use App\Models\TeacherProfile;
 use App\Models\TeachingAssignment;
 use App\Models\User;
+use App\Support\PasswordRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -63,11 +64,11 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required', ...PasswordRules::rules(), 'confirmed'],
             'nip' => ['nullable', 'string', 'max:30', 'unique:teacher_profiles,nip'],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string'],
-        ]);
+        ], PasswordRules::messages());
 
         DB::transaction(function () use ($validated) {
             $user = User::create([
@@ -108,11 +109,11 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($teacher->user_id)],
-            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
+            'password' => ['nullable', ...PasswordRules::rules(), 'confirmed'],
             'nip' => ['nullable', 'string', 'max:30', Rule::unique('teacher_profiles', 'nip')->ignore($teacher->id)],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string'],
-        ]);
+        ], PasswordRules::messages());
 
         DB::transaction(function () use ($validated, $teacher) {
             $userData = [

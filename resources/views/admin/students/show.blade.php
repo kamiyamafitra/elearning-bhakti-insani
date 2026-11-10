@@ -31,9 +31,9 @@
                 <a href="{{ route('admin.students.edit', $student) }}" class="btn btn-primary w-100">
                     <i class="bi bi-pencil-square me-1"></i> Ubah Data Siswa
                 </a>
-                <form method="POST" action="{{ route('admin.students.reset-password', $student) }}" class="mt-2" onsubmit="return confirm('Reset password {{ addslashes($student->user->name) }} menjadi NIS? Siswa wajib membuat password baru saat masuk.');">
+                <form method="POST" action="{{ route('admin.students.reset-password', $student) }}" class="mt-2" onsubmit="return confirm('Reset password {{ addslashes($student->user->name) }} dengan password sementara acak? Password baru ditampilkan sekali, dan siswa wajib menggantinya saat masuk.');">
                     @csrf
-                    <button type="submit" class="btn btn-outline-danger w-100" @disabled(blank($student->nis)) title="{{ blank($student->nis) ? 'Siswa belum memiliki NIS' : 'Reset password menjadi NIS' }}">
+                    <button type="submit" class="btn btn-outline-danger w-100" @disabled(blank($student->nis)) title="{{ blank($student->nis) ? 'Siswa belum memiliki NIS' : 'Reset dengan password sementara acak' }}">
                         <i class="bi bi-key me-1" aria-hidden="true"></i> Reset Password
                     </button>
                 </form>

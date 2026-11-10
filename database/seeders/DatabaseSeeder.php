@@ -18,6 +18,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // These demo accounts have publicly known passwords, so they must never exist on a live server.
+        // Create real administrators there with: php artisan app:admin-account <username>
+        if (app()->isProduction()) {
+            $this->command?->warn('Demo accounts are not seeded in production. Use: php artisan app:admin-account <username>');
+
+            return;
+        }
+
         $admin = User::firstOrCreate(
             ['email' => 'admin@smkbhaktiinsani.sch.id'],
             [

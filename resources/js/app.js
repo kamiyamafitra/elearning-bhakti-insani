@@ -1,4 +1,7 @@
 import 'bootstrap';
+import { initFilePreview } from './file-preview';
+
+initFilePreview();
 
 const rememberSetting = (key, value) => {
     try {

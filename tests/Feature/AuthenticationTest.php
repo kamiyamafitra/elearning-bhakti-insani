@@ -277,8 +277,11 @@ class AuthenticationTest extends TestCase
         $teacher = $this->createTeacher('198001012005011001', 'kata-sandi-guru');
         $admin = $this->createAdmin('admin', 'kata-sandi-admin');
 
+        // Each user gets a fresh session: auth.session rightly signs out a session that switches accounts.
         $this->actingAs($student->user)->get(route('student.dashboard'))->assertOk();
+        $this->flushSession();
         $this->actingAs($teacher->user)->get(route('teacher.dashboard'))->assertOk();
+        $this->flushSession();
         $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
     }
 

@@ -95,6 +95,12 @@
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert"><i class="bi bi-check-circle me-2" aria-hidden="true"></i>{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button></div>
                 @endif
+                @if(session('credential_slip'))
+                    <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
+                        <span><i class="bi bi-key me-2" aria-hidden="true"></i>Password sementara untuk {{ session('credential_slip.count') }} akun siap diunduh. Slip hanya bisa diunduh <strong>satu kali</strong> dan hilang setelah 24 jam.</span>
+                        <a href="{{ route('admin.credential-slips.download', session('credential_slip.id')) }}" class="btn btn-sm btn-primary"><i class="bi bi-download me-1" aria-hidden="true"></i>Unduh Slip Password</a>
+                    </div>
+                @endif
                 @if(session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert"><i class="bi bi-exclamation-circle me-2" aria-hidden="true"></i>{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button></div>
                 @endif

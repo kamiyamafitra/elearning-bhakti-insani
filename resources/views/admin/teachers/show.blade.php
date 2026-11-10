@@ -33,9 +33,9 @@
                 <a href="{{ route('admin.teachers.edit', $teacher) }}" class="btn btn-primary w-100">
                     <i class="bi bi-pencil-square me-1" aria-hidden="true"></i> Ubah Data Guru
                 </a>
-                <form method="POST" action="{{ route('admin.teachers.reset-password', $teacher) }}" class="mt-2" onsubmit="return confirm('Reset password {{ addslashes($teacher->user->name) }} menjadi NIP? Guru wajib membuat password baru saat masuk.');">
+                <form method="POST" action="{{ route('admin.teachers.reset-password', $teacher) }}" class="mt-2" onsubmit="return confirm('Reset password {{ addslashes($teacher->user->name) }} dengan password sementara acak? Password baru ditampilkan sekali, dan guru wajib menggantinya saat masuk.');">
                     @csrf
-                    <button type="submit" class="btn btn-outline-danger w-100" @disabled(blank($teacher->nip)) title="{{ blank($teacher->nip) ? 'Guru belum memiliki NIP' : 'Reset password menjadi NIP' }}">
+                    <button type="submit" class="btn btn-outline-danger w-100" @disabled(blank($teacher->nip)) title="{{ blank($teacher->nip) ? 'Guru belum memiliki NIP' : 'Reset dengan password sementara acak' }}">
                         <i class="bi bi-key me-1" aria-hidden="true"></i> Reset Password
                     </button>
                 </form>

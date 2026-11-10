@@ -10,15 +10,18 @@ use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 use Tests\Feature\Concerns\CreatesAcademicData;
+use Tests\Feature\Concerns\ReadsCredentialSlips;
 use Tests\TestCase;
 
 class StudentImportTest extends TestCase
 {
     use CreatesAcademicData;
+    use ReadsCredentialSlips;
     use RefreshDatabase;
 
     public function test_guests_are_redirected_and_non_admins_are_forbidden(): void
@@ -63,7 +66,14 @@ class StudentImportTest extends TestCase
         $this->assertSame('24001', $rows[1][1]);
     }
 
-    public function test_csv_import_creates_students_with_generated_email_and_nis_password(): void
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Storage::fake('local');
+    }
+
+    public function test_csv_import_creates_students_with_generated_email_and_random_temporary_password(): void
     {
         $classByCode = $this->makeClass('X TKJ 1');
         $classByName = $this->makeClass('XI RPL 2');
@@ -85,7 +95,10 @@ class StudentImportTest extends TestCase
         $this->assertSame('Andi Saputra', $andi->name);
         $this->assertSame('student', $andi->role);
         $this->assertTrue($andi->is_active);
-        $this->assertTrue(Hash::check('24001', $andi->password));
+        $passwords = $this->slipPasswords();
+        $this->assertTrue(Hash::check($passwords['24001'], $andi->password));
+        $this->assertFalse(Hash::check('24001', $andi->password), 'The NIS must not be the password.');
+        $this->assertTrue($andi->must_change_password);
         $this->assertDatabaseHas('student_profiles', [
             'user_id' => $andi->id,
             'nis' => '24001',
@@ -234,7 +247,7 @@ class StudentImportTest extends TestCase
         $afdil = StudentProfile::where('nis', '2425.10001')->firstOrFail();
         $this->assertSame('Afdil Alfarizi Hidayat', $afdil->user->name);
         $this->assertSame('2425.10001@'.StudentImportController::EMAIL_DOMAIN, $afdil->user->email);
-        $this->assertTrue(Hash::check('2425.10001', $afdil->user->password));
+        $this->assertTrue(Hash::check($this->slipPasswords()['2425.10001'], $afdil->user->password));
         $this->assertSame('0093222787', $afdil->nisn);
         $this->assertSame($existing->id, $afdil->class_id);
         $this->assertSame('083162706670', $afdil->phone);

@@ -101,8 +101,8 @@ class CreateFormLayoutTest extends TestCase
         $this->actingAs($this->admin())->post(route('admin.students.store'), [
             'name' => 'Budi Santoso',
             'email' => '',
-            'password' => 'rahasia',
-            'password_confirmation' => 'rahasia',
+            'password' => 'rahasia123',
+            'password_confirmation' => 'rahasia123',
             'nisn' => '1234567890',
             'class_id' => $class->id,
             'gender' => 'L',
@@ -125,8 +125,8 @@ class CreateFormLayoutTest extends TestCase
         $this->actingAs($this->admin())->post(route('admin.teachers.store'), [
             'name' => 'Dewi Lestari',
             'email' => '',
-            'password' => 'rahasia',
-            'password_confirmation' => 'rahasia',
+            'password' => 'rahasia123',
+            'password_confirmation' => 'rahasia123',
             'nip' => '1987654321',
             'phone' => '08129876543',
             'address' => 'Bogor',
@@ -167,8 +167,8 @@ class CreateFormLayoutTest extends TestCase
         $response = $this->actingAs($this->admin())->post(route('admin.students.store'), [
             'name' => 'Budi Santoso',
             'email' => 'budi@example.com',
-            'password' => 'rahasia',
-            'password_confirmation' => 'rahasia',
+            'password' => 'rahasia123',
+            'password_confirmation' => 'rahasia123',
             'nisn' => '1234567890',
             'nis' => '1001',
             'class_id' => $class->id,
@@ -201,8 +201,8 @@ class CreateFormLayoutTest extends TestCase
         $response = $this->actingAs($this->admin())->post(route('admin.teachers.store'), [
             'name' => 'Dewi Lestari',
             'email' => 'dewi@example.com',
-            'password' => 'rahasia',
-            'password_confirmation' => 'rahasia',
+            'password' => 'rahasia123',
+            'password_confirmation' => 'rahasia123',
             'nip' => '1987654321',
             'phone' => '08129876543',
             'address' => 'Bogor',
