@@ -46,6 +46,9 @@
     --ui-shadow-hover: 0 14px 28px -12px rgba(41, 37, 120, 0.18), 0 2px 6px rgba(17, 20, 45, 0.05);
     --ui-shadow-lg: 0 20px 40px -16px rgba(41, 37, 120, 0.22), 0 4px 12px rgba(17, 20, 45, 0.06);
     --ui-focus: 0 0 0 0.25rem rgb(var(--ui-primary-rgb) / 0.18);
+    /* Tell the browser which theme is showing, so the icons it draws itself (clock and calendar in time/date
+       fields, scrollbars, checkboxes) follow the site's theme rather than the computer's light/dark setting. */
+    color-scheme: light;
 }
 
 [data-bs-theme="dark"] {
