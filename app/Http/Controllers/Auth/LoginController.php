@@ -102,7 +102,7 @@ class LoginController extends Controller
             RateLimiter::hit($throttleKey, self::THROTTLE_DECAY_SECONDS);
             RateLimiter::hit($ipThrottleKey, self::IP_THROTTLE_DECAY_SECONDS);
 
-            return $this->failedLogin('Username dan kata sandi tidak sesuai.', $candidates->isNotEmpty());
+            return $this->failedLogin('Username dan password tidak sesuai.', $candidates->isNotEmpty());
         }
 
         if ($matchingUsers->count() > 1) {

@@ -28,11 +28,15 @@
                     <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" autocomplete="email" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="password">Kata Sandi</label>
-                    <input type="password" id="password" name="password" class="form-control" autocomplete="new-password" required>
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" autocomplete="new-password" minlength="{{ \App\Support\PasswordRules::MIN_LENGTH }}" required>
+                    @error('password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text">{{ \App\Support\PasswordRules::hint() }}</div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="password_confirmation">Konfirmasi Kata Sandi</label>
+                    <label class="form-label" for="password_confirmation">Konfirmasi Password</label>
                     <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" autocomplete="new-password" required>
                 </div>
             </div>

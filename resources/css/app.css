@@ -4038,3 +4038,15 @@ a.card:hover,
         transition: none !important;
     }
 }
+
+/* Tab links (#materi, #tugas) land below the sticky top bar instead of under it. */
+.subject-tabs-anchor {
+    display: block;
+    scroll-margin-top: 5.5rem;
+}
+
+/* The quiz countdown sticks just below the sticky top bar (min-height 64px) instead of sliding under it. */
+.quiz-timer-bar {
+    top: calc(64px + 0.5rem);
+    z-index: 1010;
+}

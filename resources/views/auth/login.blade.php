@@ -47,7 +47,7 @@
 
                 <div class="auth-aside__footer">
                     <i class="bi bi-shield-lock" aria-hidden="true"></i>
-                    <span>Koneksi aman &mdash; kata sandi tidak pernah dibagikan.</span>
+                    <span>Koneksi aman &mdash; password tidak pernah dibagikan.</span>
                 </div>
             </aside>
 
@@ -118,7 +118,7 @@
                         </div>
 
                         <div class="auth-field">
-                            <label class="form-label" for="password">Kata Sandi</label>
+                            <label class="form-label" for="password">Password</label>
                             <div class="input-group auth-input">
                                 <span class="input-group-text">
                                     <i class="bi bi-lock" aria-hidden="true"></i>
@@ -127,13 +127,13 @@
                                     id="password"
                                     name="password"
                                     class="form-control @error('password') is-invalid @enderror"
-                                    placeholder="Masukkan kata sandi"
+                                    placeholder="Masukkan password"
                                     autocomplete="current-password"
                                     required>
                                 <button class="btn btn-outline-secondary auth-password-toggle"
                                     type="button"
                                     data-password-toggle="#password"
-                                    aria-label="Tampilkan kata sandi"
+                                    aria-label="Tampilkan password"
                                     aria-pressed="false">
                                     <i class="bi bi-eye" aria-hidden="true"></i>
                                 </button>
@@ -164,7 +164,7 @@
 
                     <p class="auth-help">
                         <i class="bi bi-info-circle" aria-hidden="true"></i>
-                        Lupa kata sandi? Hubungi administrator sekolah untuk pengaturan ulang.
+                        Lupa password? Hubungi administrator sekolah untuk pengaturan ulang.
                     </p>
                 </div>
             </section>

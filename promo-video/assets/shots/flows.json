@@ -1,0 +1,101 @@
+{
+  "rapor": [
+    {
+      "img": "rp-1",
+      "target": [
+        0.2621,
+        0.3378
+      ]
+    },
+    {
+      "img": "rp-2",
+      "target": [
+        0.429,
+        0.4719
+      ]
+    },
+    {
+      "img": "rp-3",
+      "target": [
+        0.9378,
+        0.2695
+      ]
+    }
+  ],
+  "preview": [
+    {
+      "img": "pv-page",
+      "target": [
+        0.2308,
+        0.4485
+      ]
+    },
+    {
+      "img": "pv-pdf",
+      "target": null
+    },
+    {
+      "img": "pv-docx",
+      "target": null
+    },
+    {
+      "img": "pv-xlsx",
+      "target": null
+    }
+  ],
+  "quiz": [
+    {
+      "img": "qz-1",
+      "target": [
+        0.2561,
+        0.4743
+      ]
+    },
+    {
+      "img": "qz-2",
+      "target": [
+        0.2257,
+        0.337
+      ]
+    },
+    {
+      "img": "qz-3",
+      "target": [
+        0.9405,
+        0.5064
+      ]
+    },
+    {
+      "img": "qz-4",
+      "target": [
+        0.9249,
+        0.5064
+      ]
+    },
+    {
+      "img": "qz-5",
+      "target": null
+    }
+  ],
+  "pdf": [
+    {
+      "img": "pd-1",
+      "target": [
+        0.5861,
+        0.2508
+      ]
+    },
+    {
+      "img": "pd-2",
+      "target": [
+        0.2566,
+        0.4171
+      ]
+    }
+  ],
+  "pdfCheck": {
+    "status": 200,
+    "type": "application/pdf",
+    "size": 285080
+  }
+}

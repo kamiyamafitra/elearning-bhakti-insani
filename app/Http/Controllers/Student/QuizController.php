@@ -172,6 +172,11 @@ class QuizController extends Controller
         abort_if($attempt === null, 404);
 
         if (! $attempt->isActive()) {
+            // Same grace as submit(): an answer posted with "next" right at the deadline still counts.
+            if ($attempt->acceptsFinalSubmission() && (int) $validated['step'] === $attempt->current_step) {
+                $this->saveCurrentAnswer($attempt, $validated['answers'] ?? []);
+            }
+
             $attempt->finalize();
 
             return redirect()->route('student.quizzes.show', $quiz);

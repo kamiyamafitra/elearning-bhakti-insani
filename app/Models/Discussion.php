@@ -43,7 +43,8 @@ class Discussion extends Model
     protected static function booted(): void
     {
         static::deleting(function (Discussion $discussion): void {
-            $discussion->replies()->each(fn (DiscussionReply $reply) => $reply->delete());
+            // lazyById pages by id, so deleting rows while iterating does not skip any (each() pages by offset).
+            $discussion->replies()->lazyById()->each(fn (DiscussionReply $reply) => $reply->delete());
         });
     }
 

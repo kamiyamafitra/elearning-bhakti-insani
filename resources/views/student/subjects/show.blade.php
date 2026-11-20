@@ -88,7 +88,8 @@
     </div>
 </div>
 
-<div class="mt-4" id="materi">
+<div class="mt-4 subject-tabs-anchor" id="materi">
+    <span id="tugas" class="subject-tabs-anchor" aria-hidden="true"></span>
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <a class="nav-link {{ $tab === 'materials' ? 'active' : '' }}"
@@ -207,7 +208,7 @@
                                         <td class="text-end">
                                             <a href="{{ route('student.assignments.show', [$subject, $lmsAssignment]) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-eye me-1" aria-hidden="true"></i>
-                                                {{ $submission ? 'Lihat Nilai' : 'Kumpulkan Tugas' }}
+                                                {{ $submission?->isGraded() ? 'Lihat Nilai' : ($submission ? 'Lihat Pengumpulan' : 'Kumpulkan Tugas') }}
                                             </a>
                                         </td>
                                     </tr>

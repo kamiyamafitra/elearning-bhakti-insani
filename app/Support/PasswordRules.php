@@ -18,6 +18,14 @@ final class PasswordRules
     }
 
     /**
+     * Help text shown under every new-password field, so the form states the same rule the server enforces.
+     */
+    public static function hint(): string
+    {
+        return 'Minimal '.self::MIN_LENGTH.' karakter, berisi huruf dan angka.';
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function messages(string $field = 'password'): array

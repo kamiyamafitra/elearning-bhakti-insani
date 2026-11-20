@@ -10,7 +10,7 @@
     $questionNumber = $attempt->current_step + 1;
 @endphp
 
-<div class="card card-dashboard mb-3 sticky-top" style="top: 0.5rem; z-index: 1010;">
+<div class="card card-dashboard mb-3 sticky-top quiz-timer-bar">
     <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-2">
         <div>
             <span class="text-muted small">Sisa waktu</span>
@@ -28,10 +28,10 @@
     @csrf
     <input type="hidden" name="step" value="{{ $attempt->current_step }}">
 
-    <fieldset class="card card-dashboard mb-3">
+    <fieldset class="card card-dashboard mb-3" aria-labelledby="quizQuestionText">
         <div class="card-body">
             <div class="text-muted small mb-2">Soal {{ $questionNumber }} dari {{ $totalQuestions }}</div>
-            <legend class="fs-6 fw-semibold text-break" style="white-space: pre-line;">{{ $question->question }}</legend>
+            <div class="fs-6 fw-semibold text-break mb-2" id="quizQuestionText" style="white-space: pre-line;">{{ $question->question }}</div>
             @if ($question->image_path)
                 <img src="{{ route('student.quizzes.questions.image', [$quiz, $question]) }}" alt="Gambar soal {{ $questionNumber }}" class="img-fluid rounded mb-3" style="max-height: 320px;">
             @endif

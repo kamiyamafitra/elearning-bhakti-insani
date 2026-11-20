@@ -42,7 +42,15 @@ class GradeController extends Controller
 
         $ungraded = AssignmentSubmission::query()
             ->whereNull('score')
-            ->whereHas('assignment', fn ($query) => $query->where('teacher_id', $user->id))
+            // Only work the teacher can still open: owned, and in a class they still teach.
+            ->whereHas('assignment', fn ($query) => $query
+                ->where('teacher_id', $user->id)
+                ->whereExists(fn ($teaches) => $teaches
+                    ->selectRaw('1')
+                    ->from('teaching_assignments')
+                    ->whereColumn('teaching_assignments.subject_id', 'assignments.subject_id')
+                    ->whereColumn('teaching_assignments.class_id', 'assignments.class_id')
+                    ->where('teaching_assignments.teacher_id', $user->id)))
             ->with(['assignment:id,title,subject_id,class_id', 'assignment.subject:id,name', 'assignment.class:id,name', 'student:id,name'])
             ->oldest('submitted_at');
 

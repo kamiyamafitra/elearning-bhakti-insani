@@ -17,15 +17,15 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="password">Password Baru</label>
-                    <input type="password" id="password" name="password" class="form-control @error('password', 'updatePassword') is-invalid @enderror" autocomplete="new-password" minlength="6" required>
+                    <input type="password" id="password" name="password" class="form-control @error('password', 'updatePassword') is-invalid @enderror" autocomplete="new-password" minlength="{{ \App\Support\PasswordRules::MIN_LENGTH }}" required>
                     @error('password', 'updatePassword')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                    <div class="form-text">Minimal 6 karakter.</div>
+                    <div class="form-text">{{ \App\Support\PasswordRules::hint() }}</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="password_confirmation">Konfirmasi Password Baru</label>
-                    <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" autocomplete="new-password" minlength="6" required>
+                    <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" autocomplete="new-password" minlength="{{ \App\Support\PasswordRules::MIN_LENGTH }}" required>
                 </div>
             </div>
 

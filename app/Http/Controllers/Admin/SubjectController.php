@@ -230,7 +230,7 @@ class SubjectController extends Controller
             ],
         ]);
 
-        $validator->after(function ($validator) use ($schedules): void {
+        $validator->after(function ($validator) use ($schedules, $subject): void {
             $submitted = [];
             $teachersByClass = [];
 
@@ -265,7 +265,7 @@ class SubjectController extends Controller
                     continue;
                 }
 
-                if ($this->scheduleOverlaps((int) $classId, (int) $dayOfWeek, $startTime, $endTime, $schedule['id'], $submitted)) {
+                if ($this->scheduleOverlaps((int) $classId, (int) $dayOfWeek, $startTime, $endTime, $subject?->id, $submitted)) {
                     $validator->errors()->add(
                         "schedules.{$index}.start_time",
                         'Jadwal bertabrakan dengan jadwal lain pada kelas dan hari yang sama.',
@@ -287,13 +287,19 @@ class SubjectController extends Controller
     }
 
     /**
-     * Create, update, and remove the subject's schedule rows.
+     * Replace the subject's schedule rows with the submitted ones.
+     *
+     * Each time slot is unique per class, so updating rows one by one would collide part-way through
+     * a swap (A takes B's slot before B has moved). The old rows are removed first and the submitted
+     * ones written back, keeping the id and creation time of every row that already existed.
      *
      * @param  array<int, array{id: ?int, class_id: mixed, day_of_week: mixed, start_time: mixed, end_time: mixed, teacher_id: ?int}>  $schedules
      */
     private function syncSchedules(Subject $subject, array $schedules): void
     {
-        $keptScheduleIds = [];
+        $existingSchedules = $subject->schedules()->get()->keyBy('id');
+
+        $subject->schedules()->delete();
 
         foreach ($schedules as $schedule) {
             $attributes = [
@@ -303,21 +309,14 @@ class SubjectController extends Controller
                 'end_time' => $schedule['end_time'],
             ];
 
-            if ($schedule['id'] !== null) {
-                $existingSchedule = $subject->schedules()->whereKey($schedule['id'])->first();
+            $existingSchedule = $schedule['id'] !== null ? $existingSchedules->get($schedule['id']) : null;
 
-                if ($existingSchedule !== null) {
-                    $existingSchedule->update($attributes);
-                    $keptScheduleIds[] = $existingSchedule->id;
-
-                    continue;
-                }
+            if ($existingSchedule !== null) {
+                $attributes += ['id' => $existingSchedule->id, 'created_at' => $existingSchedule->created_at];
             }
 
-            $keptScheduleIds[] = $subject->schedules()->create($attributes)->id;
+            $subject->schedules()->forceCreate($attributes);
         }
-
-        $subject->schedules()->whereNotIn('id', $keptScheduleIds)->delete();
     }
 
     /**
@@ -379,6 +378,7 @@ class SubjectController extends Controller
             if ($assignment !== null) {
                 if ((int) $assignment->teacher_id !== $teacherId) {
                     $assignment->update(['teacher_id' => $teacherId]);
+                    $this->handOverCoursework($subject, $classId, $teacherId);
                 }
 
                 continue;
@@ -389,6 +389,23 @@ class SubjectController extends Controller
                 'teacher_id' => $teacherId,
                 'class_id' => $classId,
             ]);
+        }
+    }
+
+    /**
+     * A class has one teacher per subject and teachers may only manage coursework they own,
+     * so when the class gets a new teacher, its materials, assignments and quizzes move with it.
+     * Otherwise neither the old teacher (no longer teaching) nor the new one (not the owner)
+     * could open, edit or grade them.
+     */
+    private function handOverCoursework(Subject $subject, int $classId, int $teacherId): void
+    {
+        foreach ([LearningMaterial::class, Assignment::class, Quiz::class] as $model) {
+            $model::query()
+                ->where('subject_id', $subject->id)
+                ->where('class_id', $classId)
+                ->where('teacher_id', '!=', $teacherId)
+                ->update(['teacher_id' => $teacherId]);
         }
     }
 
@@ -435,6 +452,9 @@ class SubjectController extends Controller
     }
 
     /**
+     * The subject's own saved rows are skipped: the submitted rows replace all of them and are checked
+     * against each other through $submitted, so swapping or re-adding a slot is not a false clash.
+     *
      * @param  array<int, array{class_id: int, day_of_week: int, start_time: string, end_time: string}>  $submitted
      */
     private function scheduleOverlaps(
@@ -442,7 +462,7 @@ class SubjectController extends Controller
         int $dayOfWeek,
         string $startTime,
         string $endTime,
-        ?int $ignoreId,
+        ?int $subjectId,
         array $submitted,
     ): bool {
         $existsInDatabase = ClassSchedule::query()
@@ -450,7 +470,7 @@ class SubjectController extends Controller
             ->where('day_of_week', $dayOfWeek)
             ->where('start_time', '<', $endTime)
             ->where('end_time', '>', $startTime)
-            ->when($ignoreId, fn (Builder $query) => $query->whereKeyNot($ignoreId))
+            ->when($subjectId, fn (Builder $query) => $query->where('subject_id', '!=', $subjectId))
             ->exists();
 
         if ($existsInDatabase) {

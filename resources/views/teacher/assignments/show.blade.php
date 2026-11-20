@@ -200,9 +200,10 @@
                                 </td>
                             </tr>
                             @if ($submission)
+                                @php($isOldGradeForm = (int) old('submission_id') === $submission->id)
                                 <tr class="table-light">
                                     <td colspan="5" class="p-0 border-0">
-                                        <div class="collapse" id="grade-{{ $submission->id }}">
+                                        <div @class(['collapse', 'show' => $isOldGradeForm && $errors->any()]) id="grade-{{ $submission->id }}">
                                             <div class="p-3">
                                                 <div class="mb-3">
                                                     <div class="text-muted small">Jawaban teks siswa</div>
@@ -212,15 +213,26 @@
                                                 <form method="POST" action="{{ route('teacher.submissions.grade', [$assignment, $submission]) }}">
                                                     @csrf
                                                     @method('PUT')
+                                                    <input type="hidden" name="submission_id" value="{{ $submission->id }}">
                                                     <div class="row g-2 align-items-end">
                                                         <div class="col-md-2">
                                                             <label class="form-label" for="score-{{ $submission->id }}">Nilai (0–{{ $assignment->max_score }})</label>
                                                             <input type="number" id="score-{{ $submission->id }}" name="score" min="0" max="{{ $assignment->max_score }}"
-                                                                   class="form-control" value="{{ old('score', $submission->score) }}" required>
+                                                                   @class(['form-control', 'is-invalid' => $isOldGradeForm && $errors->has('score')]) value="{{ $isOldGradeForm ? old('score', $submission->score) : $submission->score }}" required>
+                                                            @if ($isOldGradeForm)
+                                                                @error('score')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            @endif
                                                         </div>
                                                         <div class="col-md-7">
                                                             <label class="form-label" for="feedback-{{ $submission->id }}">Umpan Balik</label>
-                                                            <textarea id="feedback-{{ $submission->id }}" name="feedback" rows="2" class="form-control">{{ old('feedback', $submission->feedback) }}</textarea>
+                                                            <textarea id="feedback-{{ $submission->id }}" name="feedback" rows="2" @class(['form-control', 'is-invalid' => $isOldGradeForm && $errors->has('feedback')])>{{ $isOldGradeForm ? old('feedback', $submission->feedback) : $submission->feedback }}</textarea>
+                                                            @if ($isOldGradeForm)
+                                                                @error('feedback')
+                                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            @endif
                                                         </div>
                                                         <div class="col-md-3">
                                                             <button type="submit" class="btn btn-primary w-100">

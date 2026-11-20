@@ -107,6 +107,11 @@ class QuizController extends Controller
 
         if (! $quiz->hasAttempts()) {
             $attributes += $this->teachingAttributes($request->user(), $validated['teaching']);
+        } elseif ($quiz->hasClosed() && now()->lt($attributes['closes_at'])) {
+            // Students who finished may already have seen the correct answers once it closed.
+            throw ValidationException::withMessages([
+                'closes_at' => 'Kuis yang sudah ditutup dan dikerjakan siswa tidak dapat dibuka kembali, karena kunci jawaban mungkin sudah terlihat. Buat kuis baru sebagai gantinya.',
+            ]);
         }
 
         $quiz->update($attributes);

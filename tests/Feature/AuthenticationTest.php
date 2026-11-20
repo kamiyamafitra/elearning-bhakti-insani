@@ -118,7 +118,7 @@ class AuthenticationTest extends TestCase
                 'username' => $identifier,
                 'password' => 'kata-sandi-salah',
             ])->assertRedirect('/login')
-                ->assertSessionHasErrors(['username' => 'Username dan kata sandi tidak sesuai.']);
+                ->assertSessionHasErrors(['username' => 'Username dan password tidak sesuai.']);
         }
 
         $this->assertGuest();
@@ -137,7 +137,7 @@ class AuthenticationTest extends TestCase
                 'username' => $identifier,
                 'password' => 'apa-saja',
             ])->assertRedirect('/login')
-                ->assertSessionHasErrors(['username' => 'Username dan kata sandi tidak sesuai.']);
+                ->assertSessionHasErrors(['username' => 'Username dan password tidak sesuai.']);
         }
 
         $this->assertGuest();

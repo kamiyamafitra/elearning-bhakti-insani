@@ -66,6 +66,13 @@ class AcademicYearController extends Controller
     {
         $validated = $this->validateAcademicYear($request, $academicYear);
 
+        // Nearly every page is scoped to the active year, so it can only be replaced, never just switched off.
+        if ($academicYear->is_active && ! ($validated['is_active'] ?? false)) {
+            return back()
+                ->withInput()
+                ->with('error', 'Tahun ajaran aktif tidak dapat dinonaktifkan. Aktifkan tahun ajaran lain untuk menggantikannya.');
+        }
+
         DB::transaction(function () use ($validated, $academicYear): void {
             $academicYear->update($validated);
 

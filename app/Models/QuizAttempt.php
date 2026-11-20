@@ -134,11 +134,17 @@ class QuizAttempt extends Model
     }
 
     /**
-     * Correct answers stay hidden until the quiz closes, so nobody can pass them to classmates still working.
+     * Correct answers stay hidden until the quiz closes and nobody is still working, so they cannot be
+     * passed to classmates. An attempt can outlive closes_at when the teacher moved the close time earlier.
      */
     public function canReviewAnswers(Quiz $quiz): bool
     {
-        return $this->isSubmitted() && $quiz->hasClosed();
+        return $this->isSubmitted()
+            && $quiz->hasClosed()
+            && ! $quiz->attempts()
+                ->whereNull('submitted_at')
+                ->where('deadline_at', '>', now())
+                ->exists();
     }
 
     public function includesQuestion(int $questionId): bool

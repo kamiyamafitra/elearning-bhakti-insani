@@ -35,15 +35,15 @@
                     @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="password">Kata Sandi Baru</label>
+                    <label class="form-label" for="password">Password Baru</label>
                     <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" autocomplete="new-password">
                     @error('password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                    <div class="form-text">Kosongkan jika tidak ingin mengubah kata sandi.</div>
+                    <div class="form-text">Kosongkan jika tidak ingin mengubah password. {{ \App\Support\PasswordRules::hint() }}</div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="password_confirmation">Konfirmasi Kata Sandi Baru</label>
+                    <label class="form-label" for="password_confirmation">Konfirmasi Password Baru</label>
                     <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" autocomplete="new-password">
                 </div>
             </div>

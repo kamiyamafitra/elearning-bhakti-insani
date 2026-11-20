@@ -89,7 +89,8 @@
     </div>
 </div>
 
-<div class="mt-4" id="materi">
+<div class="mt-4 subject-tabs-anchor" id="materi">
+    <span id="tugas" class="subject-tabs-anchor" aria-hidden="true"></span>
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <a class="nav-link {{ $tab === 'materials' ? 'active' : '' }}"

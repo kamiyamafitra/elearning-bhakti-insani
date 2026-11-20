@@ -65,7 +65,8 @@ class AssignmentPolicy
         }
 
         if ($user->isTeacher()) {
-            return $this->owns($user, $assignment);
+            return $this->owns($user, $assignment)
+                && $this->teaches($user, (int) $assignment->subject_id, (int) $assignment->class_id);
         }
 
         return false;

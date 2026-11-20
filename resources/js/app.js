@@ -80,7 +80,7 @@ document.querySelectorAll('[data-password-toggle]').forEach((button) => {
 
         input.type = isHidden ? 'text' : 'password';
         button.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
-        button.setAttribute('aria-label', isHidden ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+        button.setAttribute('aria-label', isHidden ? 'Sembunyikan password' : 'Tampilkan password');
 
         const icon = button.querySelector('i');
 

@@ -83,13 +83,21 @@ class AssignmentController extends Controller
                 ->withInput();
         }
 
-        $hasExistingContent = $existing !== null
-            && ($existing->hasFile() || filled($existing->text_response));
+        // The text box is pre-filled with the previous answer, so the submitted text replaces it.
+        // Only an already uploaded file carries over, and the result must still contain something.
+        $keepsExistingFile = $existing?->hasFile() ?? false;
 
-        if (! $request->hasFile('file') && $textResponse === null && ! $hasExistingContent) {
+        if (! $request->hasFile('file') && $textResponse === null && ! $keepsExistingFile) {
             return back()
                 ->withErrors(['file' => 'Unggah berkas atau isi jawaban teks sebelum mengumpulkan tugas.'])
                 ->withInput();
+        }
+
+        // Resubmitting the same work must not re-stamp it (which could turn an on-time submission late).
+        if ($existing !== null && ! $request->hasFile('file') && $textResponse === $existing->text_response) {
+            return redirect()
+                ->route('student.assignments.show', [$subject, $assignment])
+                ->with('success', 'Tidak ada perubahan, pengumpulan sebelumnya tetap tersimpan.');
         }
 
         $oldFilePath = $existing?->file_path;
