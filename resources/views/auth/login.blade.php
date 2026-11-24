@@ -53,6 +53,17 @@
 
             <section class="auth-main" aria-labelledby="auth-title">
                 <div class="auth-main__inner">
+                    {{-- On phones the blue panel moves below the form, so the school brand is repeated here at the top. --}}
+                    <div class="auth-brand auth-brand--compact">
+                        <span class="auth-brand__icon">
+                            <img src="{{ $school->logoUrl() }}" alt="">
+                        </span>
+                        <span class="auth-brand__text">
+                            <strong>{{ $school->name }}</strong>
+                            <small>{{ $school->city }}</small>
+                        </span>
+                    </div>
+
                     <header class="auth-header">
                         <span class="auth-header__badge">
                             <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>

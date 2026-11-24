@@ -4063,3 +4063,48 @@ a.card:hover,
     width: 44px;
     height: 44px;
 }
+
+/* Login on phones only (under 768px): no intro panel. The whole screen takes the panel's blue
+   gradient and the form card sits centred on it, with the school brand at the top of the card
+   (.auth-brand--compact). Tablets and desktop keep the original two-part layout. */
+.auth-brand--compact {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .auth-page {
+        background: linear-gradient(145deg, #312E81 0%, #4F46E5 55%, #7C3AED 100%);
+        background-attachment: fixed;
+        padding: 1.25rem 1rem;
+    }
+
+    .auth-shell {
+        max-width: 440px;
+    }
+
+    .auth-aside {
+        display: none;
+    }
+
+    .auth-card {
+        border-color: rgba(255, 255, 255, 0.18);
+        box-shadow: 0 24px 60px rgba(15, 12, 60, 0.45);
+    }
+
+    .auth-copyright {
+        color: rgba(255, 255, 255, 0.78);
+    }
+
+    .auth-brand--compact {
+        display: flex;
+        margin-bottom: 1.5rem;
+    }
+
+    .auth-brand--compact .auth-brand__text strong {
+        color: var(--ui-text);
+    }
+
+    .auth-brand--compact .auth-brand__text small {
+        color: var(--ui-muted);
+    }
+}
