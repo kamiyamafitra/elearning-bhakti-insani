@@ -23,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->append(SecurityHeaders::class);
 
+        // Coolify's reverse proxy (Traefik) terminates https; trust its X-Forwarded-* headers
+        // so Laravel builds https URLs and sends the secure session cookie.
+        $middleware->trustProxies(at: '*');
+
         // Only answer for the host in APP_URL (and its subdomains), so a forged Host header can't redirect users elsewhere.
         // Laravel skips this check in the local environment and in tests.
         $middleware->trustHosts();
