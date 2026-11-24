@@ -61,9 +61,21 @@ class SchoolSetting extends Model
         return self::SEMESTER_LABELS[$this->semester] ?? $this->semester;
     }
 
-    public function logoUrl(): ?string
+    /**
+     * The school's own logo, shipped in public/images; a logo uploaded in Pengaturan Sekolah replaces it.
+     */
+    public const DEFAULT_LOGO = 'images/logo-bhakti-insani.png';
+
+    public function logoUrl(): string
     {
-        return $this->logo_path ? route('school-logo', ['v' => $this->updated_at?->timestamp]) : null;
+        return $this->logo_path
+            ? route('school-logo', ['v' => $this->updated_at?->timestamp])
+            : asset(self::DEFAULT_LOGO);
+    }
+
+    public function hasUploadedLogo(): bool
+    {
+        return filled($this->logo_path);
     }
 
     public function activityLabel(): string

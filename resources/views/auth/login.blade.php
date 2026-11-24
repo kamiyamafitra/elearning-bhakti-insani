@@ -13,7 +13,7 @@
             <aside class="auth-aside">
                 <div class="auth-brand">
                     <span class="auth-brand__icon">
-                        @if ($school->logoUrl())<img src="{{ $school->logoUrl() }}" alt="">@else<i class="bi bi-mortarboard-fill" aria-hidden="true"></i>@endif
+                        <img src="{{ $school->logoUrl() }}" alt="">
                     </span>
                     <span class="auth-brand__text">
                         <strong>{{ $school->name }}</strong>

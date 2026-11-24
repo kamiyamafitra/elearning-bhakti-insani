@@ -33,7 +33,7 @@
         <aside class="app-sidebar offcanvas-lg offcanvas-start" id="sidebarMenu" tabindex="-1" aria-label="Menu navigasi">
             <div class="app-sidebar__brand">
                 <a href="{{ route($dashboardRoute) }}" class="app-brand">
-                    <span class="app-brand__logo" aria-hidden="true">@if ($school->logoUrl())<img src="{{ $school->logoUrl() }}" alt="">@else<i class="bi bi-mortarboard-fill" aria-hidden="true"></i>@endif</span>
+                    <span class="app-brand__logo" aria-hidden="true"><img src="{{ $school->logoUrl() }}" alt=""></span>
                     <span class="app-brand__text">
                         <span class="app-brand__name">{{ $school->name }}</span>
                         <span class="app-brand__tagline">{{ trim('E-Learning '.$school->city) }}</span>

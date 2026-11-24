@@ -4050,3 +4050,16 @@ a.card:hover,
     top: calc(64px + 0.5rem);
     z-index: 1010;
 }
+
+/* With a logo image, show the emblem itself instead of a coloured tile behind it. */
+.app-brand__logo:has(img),
+.auth-brand__icon:has(img) {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+}
+
+.auth-brand__icon:has(img) {
+    width: 44px;
+    height: 44px;
+}

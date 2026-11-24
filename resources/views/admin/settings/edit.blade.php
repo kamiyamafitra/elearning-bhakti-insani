@@ -17,13 +17,10 @@
                 </div>
                 <div class="card-body">
                     <div class="text-center mb-3">
-                        @if ($settings->logoUrl())
-                            <img src="{{ $settings->logoUrl() }}" alt="Logo {{ $settings->name }}" class="img-fluid" style="max-height: 120px;">
-                        @else
-                            <span class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                <i class="bi bi-mortarboard-fill fs-2" aria-hidden="true"></i>
-                            </span>
-                        @endif
+                        <img src="{{ $settings->logoUrl() }}" alt="Logo {{ $settings->name }}" class="img-fluid" style="max-height: 120px;">
+                        @unless ($settings->hasUploadedLogo())
+                            <div class="form-text">Logo bawaan Yayasan Bhakti Insani. Unggah logo lain untuk menggantinya.</div>
+                        @endunless
                     </div>
 
                     <label class="form-label" for="logo">Unggah Logo</label>
@@ -33,10 +30,10 @@
                     @enderror
                     <div class="form-text">PNG, JPG, atau WEBP, maksimal 1 MB. Sebaiknya berbentuk persegi.</div>
 
-                    @if ($settings->logo_path)
+                    @if ($settings->hasUploadedLogo())
                         <div class="form-check mt-3">
                             <input type="checkbox" id="remove_logo" name="remove_logo" value="1" class="form-check-input">
-                            <label class="form-check-label" for="remove_logo">Hapus logo</label>
+                            <label class="form-check-label" for="remove_logo">Hapus logo unggahan (kembali ke logo bawaan)</label>
                         </div>
                     @endif
                 </div>

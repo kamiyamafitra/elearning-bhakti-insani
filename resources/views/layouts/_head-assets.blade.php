@@ -23,6 +23,12 @@
     })();
 </script>
 <meta name="color-scheme" content="light dark">
+@if (isset($school) && $school->hasUploadedLogo())
+    <link rel="icon" href="{{ $school->logoUrl() }}">
+@else
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32.png') }}">
+@endif
+<link rel="apple-touch-icon" href="{{ asset('images/apple-touch-icon.png') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
